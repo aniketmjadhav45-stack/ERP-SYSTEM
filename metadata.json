@@ -1,0 +1,6 @@
+{
+  "name": "Cloud ERP",
+  "description": "A high-end, multi-tenant cloud ERP platform featuring CRM, HR, Projects, Finance, Inventory, Automations, Role-Based Access Control, and Gemini AI Insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
