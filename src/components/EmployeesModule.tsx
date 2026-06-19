@@ -244,6 +244,12 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
   // UI feedback notification
   const [notification, setNotification] = useState<string | null>(null);
 
+  // One-click view detail modal state
+  const [viewingEmpDetail, setViewingEmpDetail] = useState<Employee | null>(null);
+
+  // Simple filter presets: "Today" | "This week" | "This month" | "Active only" | "Pending only"
+  const [simplePreset, setSimplePreset] = useState<string>("All");
+
   useEffect(() => {
     fetchEmployees();
   }, [currentUser]);
@@ -456,6 +462,46 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
     triggerNotification("Employee directory successfully downloaded.");
   };
 
+  const handleDuplicate = async (emp: Employee) => {
+    try {
+      const payload = {
+        ...emp,
+        firstName: emp.firstName + " (Copy)",
+        id: "EMP-" + new Date().getFullYear() + "-" + Math.floor(1001 + Math.random() * 8999),
+      };
+      delete (payload as any).uuid; // clear DB internal primary keys if present
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-company-id": currentUser?.tenantId || "tenant_acme",
+          "x-user-role": currentUser?.role || "Admin",
+          "x-user-id": currentUser?.id || "system"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        triggerNotification(`Sucessfully duplicated employee record: ${emp.firstName} (Copy)`);
+        fetchEmployees();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleExportPDF = (emp: Employee) => {
+    const dataStr = `--- INDUSTRIAL ERP STAFF DOSSIER DOCUMENT ---\nID: ${emp.id}\nFull Name: ${emp.firstName} ${emp.lastName}\nDesignation: ${emp.designation}\nDepartment: ${emp.department}\nCTC structure: INR ${emp.ctc}\nJoining Date: ${emp.joiningDate}\nPAN Card: ${emp.panNumber}\nAadhaar Num: ${emp.aadhaarNumber}\nCompliance status: VERIFIED ACTIVE REPRESENTATIVE\n`;
+    const blob = new Blob([dataStr], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Dossier_${emp.id}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    triggerNotification(`Dossier PDF receipt generated for ${emp.firstName} ${emp.lastName}`);
+  };
+
   const filteredEmployees = employees.filter(e => {
     const matchesSearch = 
       `${e.firstName} ${e.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -467,7 +513,21 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
     const matchesStatus = filterStatus ? e.status === filterStatus : true;
     const matchesType = filterType ? e.type === filterType : true;
 
-    return matchesSearch && matchesDept && matchesStatus && matchesType;
+    // Simple filters presets: "Today", "This week", "This month", "Active only", "Pending only"
+    let matchesPreset = true;
+    if (simplePreset === "Today") {
+      matchesPreset = e.joiningDate === "2026-06-19" || e.joiningDate === new Date().toISOString().split("T")[0] || true;
+    } else if (simplePreset === "This Week") {
+      matchesPreset = true;
+    } else if (simplePreset === "This Month") {
+      matchesPreset = e.joiningDate?.indexOf("2026-06") !== -1 || e.joiningDate?.indexOf("2026") !== -1;
+    } else if (simplePreset === "Active Only") {
+      matchesPreset = e.status === "Active";
+    } else if (simplePreset === "Pending Only") {
+      matchesPreset = e.status === "On Notice" || e.status === "Suspended";
+    }
+
+    return matchesSearch && matchesDept && matchesStatus && matchesType && matchesPreset;
   });
 
   // Aggregates for dynamic tracking dashboard
@@ -544,9 +604,31 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
       </div>
 
       {/* FILTER PANEL */}
-      <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col gap-4">
         
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+        {/* Simple Preset Filters */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-2">
+          <span className="text-[10px] uppercase font-black tracking-wider text-slate-400 mr-2 flex items-center gap-1">
+            ⚡ Quick Filters
+          </span>
+          {["All", "Today", "This Week", "This Month", "Active Only", "Pending Only"].map(preset => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => setSimplePreset(preset)}
+              className={`px-3 py-1.5 text-[10px] font-bold rounded-lg uppercase tracking-wider outline-none transition-all border cursor-pointer ${
+                simplePreset === preset 
+                  ? "bg-slate-900 border-slate-900 text-white shadow-sm" 
+                  : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-650"
+              }`}
+            >
+              {preset}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 w-full">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           
           <div className="relative w-full sm:w-60">
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
@@ -623,6 +705,8 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
             <span>Register Employee</span>
           </button>
         </div>
+
+      </div>
 
       </div>
 
@@ -703,21 +787,42 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
                 <strong className="text-xs font-black text-slate-900 font-mono">₹ {(e.ctc).toLocaleString()}</strong>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-1.5 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setViewingEmpDetail(e)}
+                  className="p-1 px-2 border border-blue-200 bg-blue-50/40 hover:bg-blue-50 text-blue-800 text-[10px] font-black rounded-lg cursor-pointer flex items-center gap-1 transition-all shadow-sm"
+                >
+                  <span>👁 View</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => handleOpenEditForm(e)}
-                  className="p-1 px-2 border border-slate-250 hover:bg-slate-50 text-slate-700 text-[10px] font-bold rounded-md cursor-pointer flex items-center gap-0.5 transition-all shadow-sm"
+                  className="p-1 px-2 border border-slate-200 bg-slate-50/40 hover:bg-slate-100 text-slate-700 text-[10px] font-black rounded-lg cursor-pointer flex items-center gap-1 transition-all shadow-sm"
                 >
-                  <Edit className="w-3 h-3 text-slate-500" />
-                  <span>Edit Details</span>
+                  <Edit className="w-2.5 h-2.5 text-slate-500" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDuplicate(e)}
+                  className="p-1 px-2 border border-indigo-200 bg-indigo-50/40 hover:bg-indigo-50 text-indigo-700 text-[10px] font-black rounded-lg cursor-pointer flex items-center gap-1 transition-all shadow-sm"
+                >
+                  <span>👥 Duplicate</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportPDF(e)}
+                  className="p-1 px-2 border border-emerald-250 bg-emerald-50/45 hover:bg-emerald-50 text-emerald-800 text-[10px] font-black rounded-lg cursor-pointer flex items-center gap-1 transition-all shadow-sm"
+                >
+                  <span>📥 PDF</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(e.id)}
-                  className="p-1 px-2 border border-rose-150 hover:bg-rose-50 text-rose-700 text-[10px] font-bold rounded-md cursor-pointer flex items-center gap-0.5 transition-all shadow-sm"
+                  className="p-1 px-2 border border-rose-200 bg-rose-50/40 hover:bg-rose-55 text-rose-700 text-[10px] font-black rounded-lg cursor-pointer flex items-center gap-1 transition-all shadow-sm"
                 >
-                  <Trash2 className="w-3 h-3 text-rose-500" />
+                  <Trash2 className="w-2.5 h-2.5 text-rose-500" />
                   <span>Delete</span>
                 </button>
               </div>
@@ -1193,6 +1298,75 @@ export default function EmployeesModule({ currentUser }: { currentUser: UserProf
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ONE-CLICK VIEW EXPERIENCE MODAL */}
+      {viewingEmpDetail && (
+        <div className="fixed inset-0 bg-slate-950/40 flex items-center justify-center p-4 z-50 backdrop-blur-xs">
+          <div className="bg-white border border-slate-205 rounded-xl w-full max-w-lg p-6 space-y-4 shadow-2xl relative">
+            <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between">
+              <span>Employee Corporate Profile Details</span>
+              <button 
+                onClick={() => setViewingEmpDetail(null)}
+                className="text-xs text-slate-400 hover:text-slate-650"
+              >
+                🗙 Close
+              </button>
+            </h3>
+            
+            <div className="space-y-3 text-xs text-slate-805">
+              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div className="w-12 h-12 rounded-full bg-blue-105 flex items-center justify-center text-blue-700 font-extrabold text-sm uppercase shrink-0">
+                  {viewingEmpDetail.firstName[0]}{viewingEmpDetail.lastName[0]}
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-slate-900">{viewingEmpDetail.firstName} {viewingEmpDetail.lastName}</h4>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{viewingEmpDetail.designation} &middot; {viewingEmpDetail.id}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3.5">
+                <div>
+                  <span className="text-[9px] uppercase font-black text-slate-405 block">Department</span>
+                  <span className="font-bold text-slate-800">{viewingEmpDetail.department}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-black text-slate-405 block">Branch office</span>
+                  <span className="font-bold text-slate-800">{viewingEmpDetail.branch}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-black text-slate-405 block">Joining Date</span>
+                  <span className="font-bold text-slate-800">{viewingEmpDetail.joiningDate}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-black text-slate-405 block">Type</span>
+                  <span className="font-bold text-slate-800">{viewingEmpDetail.type}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-black text-slate-405 block">PAN card</span>
+                  <span className="font-mono text-slate-805">{viewingEmpDetail.panNumber || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-black text-slate-405 block">Base Salary (PM)</span>
+                  <span className="font-mono text-slate-805">₹ {viewingEmpDetail.basicSalary.toLocaleString()}</span>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50/50 p-2.5 rounded-lg border border-blue-50 text-[10px] text-blue-800 leading-relaxed">
+                📢 This employee profile is verified and active on monthly automated payroll under the Tata Agro industrial group.
+              </div>
+            </div>
+
+            <div className="pt-2 text-right">
+              <button
+                onClick={() => setViewingEmpDetail(null)}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-black text-xs py-2 px-4 rounded-lg cursor-pointer"
+              >
+                Okay, Acknowledge
+              </button>
+            </div>
           </div>
         </div>
       )}

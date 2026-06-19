@@ -56,8 +56,36 @@ const initialCustomers: Customer[] = [
   }
 ];
 
-export default function CustomersModule() {
+interface CustomersModuleProps {
+  currentUser?: any;
+}
+
+export default function CustomersModule({ currentUser }: CustomersModuleProps) {
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+
+  React.useEffect(() => {
+    fetchCustomers();
+  }, [currentUser]);
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch("/api/customers", {
+        headers: {
+          "x-company-id": currentUser?.tenantId || "tenant_acme",
+          "x-user-role": currentUser?.role || "Admin",
+          "x-user-id": currentUser?.id || "system"
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setCustomers(data);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch customers in CustomersModule: ", err);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [filterState, setFilterState] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -112,37 +140,76 @@ export default function CustomersModule() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const matched = customers.find(c => c.id === id);
     if (confirm(`Are you sure you want to delete Customer Account for "${matched?.companyName}"?`)) {
-      setCustomers(customers.filter(c => c.id !== id));
-      triggerNotification(`Permanently removed customer registry for "${matched?.companyName}".`);
+      try {
+        const res = await fetch(`/api/customers/${id}`, {
+          method: "DELETE",
+          headers: {
+            "x-company-id": currentUser?.tenantId || "tenant_acme",
+            "x-user-role": currentUser?.role || "Admin",
+            "x-user-id": currentUser?.id || "system"
+          }
+        });
+        if (res.ok) {
+          triggerNotification(`Permanently removed customer registry for "${matched?.companyName}".`);
+          fetchCustomers();
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!companyName || !contactPerson || !email) {
       alert("Please fill in corporate requirements.");
       return;
     }
 
-    if (editingCustomer) {
-      setCustomers(customers.map(c => c.id === editingCustomer.id ? {
-        ...c,
-        companyName, contactPerson, email, mobile, gstNumber, address, notes, status,
-        acquisitionValue: Number(acquisitionValue)
-      } : c));
-      triggerNotification(`Successfully revised records for "${companyName}".`);
-    } else {
-      const generatedId = `CUST2026-0${101 + customers.length}`;
-      const newCust: Customer = {
-        id: generatedId,
-        companyName, contactPerson, email, mobile, gstNumber, address, notes, status,
-        acquisitionValue: Number(acquisitionValue)
-      };
-      setCustomers([...customers, newCust]);
-      triggerNotification(`Successfully registered "${companyName}" with account ${generatedId}.`);
+    const payload = {
+      companyName, contactPerson, email, mobile, gstNumber, address, notes, status,
+      acquisitionValue: Number(acquisitionValue)
+    };
+
+    try {
+      let res;
+      if (editingCustomer) {
+        res = await fetch(`/api/customers/${editingCustomer.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-company-id": currentUser?.tenantId || "tenant_acme",
+            "x-user-role": currentUser?.role || "Admin",
+            "x-user-id": currentUser?.id || "system"
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          triggerNotification(`Successfully revised records for "${companyName}".`);
+        }
+      } else {
+        const generatedId = `CUST-2026-${1001 + customers.length}`;
+        res = await fetch("/api/customers", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-company-id": currentUser?.tenantId || "tenant_acme",
+            "x-user-role": currentUser?.role || "Admin",
+            "x-user-id": currentUser?.id || "system"
+          },
+          body: JSON.stringify({ id: generatedId, ...payload })
+        });
+        if (res.ok) {
+          const created = await res.json();
+          triggerNotification(`Successfully registered "${companyName}" with account ${created.id || generatedId}.`);
+        }
+      }
+      fetchCustomers();
+    } catch (err) {
+      console.error(err);
     }
     setIsFormOpen(false);
   };

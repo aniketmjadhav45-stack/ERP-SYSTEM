@@ -630,6 +630,19 @@ app.put("/api/invoices/:id", (req, res) => {
   }
 });
 
+app.delete("/api/invoices/:id", (req, res) => {
+  const index = dbInvoices.findIndex(i => i.id === req.params.id);
+  if (index !== -1) {
+    if (dbInvoices[index].company_id !== req.companyId) {
+      return res.status(403).json({ error: "Access Denied." });
+    }
+    dbInvoices.splice(index, 1);
+    res.json({ message: "Invoice deleted successfully" });
+  } else {
+    res.status(404).json({ error: "Invoice not found" });
+  }
+});
+
 // Expenses Finance Endpoints
 app.get("/api/expenses", (req, res) => {
   res.json(getIsolatedData(dbExpenses, req));

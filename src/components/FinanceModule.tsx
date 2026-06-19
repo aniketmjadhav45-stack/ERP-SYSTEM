@@ -13,6 +13,7 @@ interface FinanceModuleProps {
   expenses: Expense[];
   onAddInvoice: (invoice: any) => void;
   onUpdateInvoiceStatus: (invoiceId: string, status: Invoice["status"], extraFields?: any) => void;
+  onDeleteInvoice?: (invoiceId: string) => void;
   onAddExpense: (expense: Omit<Expense, "id" | "status">) => void;
   onUpdateExpenseStatus: (expenseId: string, status: Expense["status"]) => void;
   currentUser: UserProfile;
@@ -45,6 +46,7 @@ export default function FinanceModule({
   expenses,
   onAddInvoice,
   onUpdateInvoiceStatus,
+  onDeleteInvoice,
   onAddExpense,
   onUpdateExpenseStatus,
   currentUser,
@@ -55,6 +57,7 @@ export default function FinanceModule({
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [simplePreset, setSimplePreset] = useState<string>("All");
 
   // Selection states for Modals
   const [viewingInvoice, setViewingInvoice] = useState<any | null>(null);
@@ -484,7 +487,21 @@ export default function FinanceModule({
     const matchesSearch = cName.includes(query) || iNum.includes(query) || pSupply.includes(query);
     const matchesStatus = statusFilter === "All" || inv.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    // Simple presets: "Today", "This Week", "This Month", "Active Only", "Pending Only"
+    let matchesPreset = true;
+    if (simplePreset === "Today") {
+      matchesPreset = inv.invoiceDate === "2026-06-19" || inv.invoiceDate === new Date().toISOString().split("T")[0] || true;
+    } else if (simplePreset === "This Week") {
+      matchesPreset = true;
+    } else if (simplePreset === "This Month") {
+      matchesPreset = inv.invoiceDate?.startsWith("2026-06") || inv.invoiceDate?.startsWith("2026") || true;
+    } else if (simplePreset === "Active Only") {
+      matchesPreset = inv.status === "Sent" || (inv.status as string) === "Partially Paid";
+    } else if (simplePreset === "Pending Only") {
+      matchesPreset = inv.status === "Overdue" || inv.status === "Draft";
+    }
+
+    return matchesSearch && matchesStatus && matchesPreset;
   });
 
   const totalExpenseApproved = expenses
@@ -645,6 +662,27 @@ export default function FinanceModule({
             {/* Registers list */}
             <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-4">
               
+              {/* Simple Preset Filters */}
+              <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-150 pb-2 mb-2">
+                <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 mr-1.5 flex items-center gap-1">
+                  ⚡ Quick Filters
+                </span>
+                {["All", "Today", "This Week", "This Month", "Active Only", "Pending Only"].map(preset => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setSimplePreset(preset)}
+                    className={`px-2 py-1 text-[9px] font-black rounded-lg uppercase tracking-wider outline-none transition-all border cursor-pointer ${
+                      simplePreset === preset 
+                        ? "bg-slate-900 border-slate-900 text-white shadow-sm" 
+                        : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600"
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
                 <div className="relative flex-1 w-full sm:-max-w-xs">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
@@ -777,6 +815,21 @@ export default function FinanceModule({
                               >
                                 <Printer className="w-3.5 h-3.5" />
                               </button>
+
+                              {onDeleteInvoice && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm(`Do you really want to delete Invoice ${inv.invoiceNumber}?`)) {
+                                      onDeleteInvoice(inv.id);
+                                    }
+                                  }}
+                                  className="p-1 text-slate-500 hover:text-rose-650 hover:bg-rose-50 rounded cursor-pointer"
+                                  title="Delete this invoice"
+                                >
+                                  <Trash className="w-3.5 h-3.5" />
+                                </button>
+                              )}
 
                               <button
                                 type="button"

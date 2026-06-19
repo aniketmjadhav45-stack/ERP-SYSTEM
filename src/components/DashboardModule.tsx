@@ -17,6 +17,7 @@ interface DashboardModuleProps {
   leaves: LeaveRequest[];
   payroll: any[];
   logs: any[];
+  activityFeed?: any[];
   currentUser: UserProfile;
   onNavigateToModule: (moduleName: string) => void;
   onUpdateLeaveStatus?: (leaveId: string, status: "Approved" | "Rejected") => void;
@@ -35,6 +36,7 @@ export default function DashboardModule({
   leaves,
   payroll,
   logs,
+  activityFeed = [],
   currentUser,
   onNavigateToModule,
   onUpdateLeaveStatus,
@@ -155,82 +157,113 @@ export default function DashboardModule({
         </div>
       </div>
 
-      {/* 📊 NUMERICAL KPI GRID WRITTEN TO EXACT METRICS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 📊 NUMERICAL KPI GRID - THE 6 SPECIFIC METRIC CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 font-sans">
         
-        {/* Metric 1: Total Revenue */}
-        <div className="bg-white border border-slate-200/60 p-5 rounded-2xl flex flex-col justify-between hover:scale-[1.01] hover:border-blue-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
+        {/* Card 1: Total Employees */}
+        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl flex flex-col justify-between hover:border-slate-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Total Revenue</span>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 font-mono tracking-tight">₹ {totalRevenue.toLocaleString()}</h3>
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Employees</span>
+              <h3 className="text-xl font-bold text-slate-950 font-mono tracking-tight">{users.length}</h3>
             </div>
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-100 transition-colors">
-              <Landmark className="w-5 h-5" />
+            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+              <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="pt-4 mt-2 border-t border-slate-100/65 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 font-medium">Outstanding: ₹ {pendingRevenue.toLocaleString()}</span>
-            <span className="text-emerald-700 font-extrabold flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> +15% YoY
-            </span>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 font-medium font-sans flex items-center justify-between">
+            <span>Roster Active</span>
+            <span className="text-emerald-600 font-bold">100% Onboard</span>
           </div>
         </div>
 
-        {/* Metric 2: Employees */}
-        <div className="bg-white border border-slate-200/60 p-5 rounded-2xl flex flex-col justify-between hover:scale-[1.01] hover:border-blue-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
+        {/* Card 2: Total Revenue */}
+        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl flex flex-col justify-between hover:border-slate-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Employees</span>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 font-mono tracking-tight">{totalEmployeesCount} Active</h3>
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Revenue</span>
+              <h3 className="text-xl font-bold text-slate-950 font-mono tracking-tight">₹ {totalRevenue.toLocaleString()}</h3>
             </div>
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-100 transition-colors">
-              <Users className="w-5 h-5" />
+            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+              <Landmark className="w-4 h-4" />
             </div>
           </div>
-          <div className="pt-4 mt-2 border-t border-slate-100/65 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 font-medium font-sans">Across 10 Departments</span>
-            <button 
-              onClick={() => onNavigateToModule("employees")}
-              className="text-blue-650 font-bold hover:underline cursor-pointer"
-            >
-              View Roster
-            </button>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 font-medium font-sans flex items-center justify-between">
+            <span>Corporate Book</span>
+            <span className="text-emerald-700 font-bold">+18.5% MoM</span>
           </div>
         </div>
 
-        {/* Metric 3: Active Projects */}
-        <div className="bg-white border border-slate-200/60 p-5 rounded-2xl flex flex-col justify-between hover:scale-[1.01] hover:border-blue-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
+        {/* Card 3: Pending Tasks */}
+        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl flex flex-col justify-between hover:border-slate-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Active Projects</span>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 font-mono tracking-tight">{activeProjectsCount} Mapped</h3>
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Pending Tasks</span>
+              <h3 className="text-xl font-bold text-slate-950 font-mono tracking-tight">
+                {tasks.filter(t => t.status !== "Completed").length}
+              </h3>
             </div>
-            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-100 transition-colors">
-              <FolderKanban className="w-5 h-5" />
+            <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+              <CheckSquare className="w-4 h-4" />
             </div>
           </div>
-          <div className="pt-4 mt-2 border-t border-slate-100/65 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 font-medium">Total registered: {projects.length}</span>
-            <span className="text-indigo-700 font-semibold uppercase text-[10px] tracking-wide">Gantt Active</span>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 font-medium font-sans flex items-center justify-between">
+            <span>To Be Resolved</span>
+            <span className="text-amber-700 font-bold font-sans">In Backlog</span>
           </div>
         </div>
 
-        {/* Metric 4: Attendance Rate */}
-        <div className="bg-white border border-slate-200/60 p-5 rounded-2xl flex flex-col justify-between hover:scale-[1.01] hover:border-blue-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
+        {/* Card 4: Active Projects */}
+        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl flex flex-col justify-between hover:border-slate-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Attendance</span>
-              <h3 className="text-xl md:text-2xl font-black text-slate-900 font-mono tracking-tight">{activePresentCount} / {users.length}</h3>
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Active Projects</span>
+              <h3 className="text-xl font-bold text-slate-950 font-mono tracking-tight">
+                {projects.filter(p => p.status === "In Progress" || p.status === "Planning").length}
+              </h3>
             </div>
-            <div className="p-2.5 bg-violet-50 text-violet-600 rounded-xl group-hover:bg-violet-100 transition-colors">
-              <UserCheck className="w-5 h-5" />
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+              <FolderKanban className="w-4 h-4" />
             </div>
           </div>
-          <div className="pt-4 mt-2 border-t border-slate-100/65 flex items-center justify-between text-[11px]">
-            <span className="text-slate-500 font-medium">Present Today</span>
-            <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-black">
-              {Math.round((activePresentCount / (users.length || 1)) * 100)}% IN
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 font-medium font-sans flex items-center justify-between">
+            <span>In Hand / Scoped</span>
+            <span className="text-indigo-700 font-bold font-sans">Trackable</span>
+          </div>
+        </div>
+
+        {/* Card 5: Pending Payments */}
+        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl flex flex-col justify-between hover:border-slate-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Pending Payments</span>
+              <h3 className="text-xl font-bold text-slate-950 font-mono tracking-tight">₹ {pendingRevenue.toLocaleString()}</h3>
+            </div>
+            <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
+              <Receipt className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 font-medium font-sans flex items-center justify-between">
+            <span>Awaiting Collection</span>
+            <span className="text-amber-605 font-bold font-sans text-amber-600">Pending Invoices</span>
+          </div>
+        </div>
+
+        {/* Card 6: Today Attendance */}
+        <div className="bg-white border border-slate-200/60 p-4 rounded-2xl flex flex-col justify-between hover:border-slate-300 transition-all duration-200 shadow-sm relative overflow-hidden group">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Today Attendance</span>
+              <h3 className="text-xl font-bold text-slate-950 font-mono tracking-tight">{activePresentCount} / {users.length}</h3>
+            </div>
+            <div className="p-2 bg-violet-50 text-violet-600 rounded-xl">
+              <UserCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 font-medium font-sans flex items-center justify-between">
+            <span>Clocked-in</span>
+            <span className="bg-emerald-50 text-emerald-800 px-1 py-0.2 text-[9px] rounded font-black font-sans">
+              {Math.round((activePresentCount / (users.length || 1)) * 100)}%
             </span>
           </div>
         </div>
@@ -500,33 +533,56 @@ export default function DashboardModule({
               <Clock className="w-3.5 h-3.5 text-slate-500" />
               <span>Full Attendance Logs</span>
             </button>
-          </div>
-
-          {/* REAL TIME TELEMETRY ACTIVITY FEED (Direct from logs) */}
-          <div className="bg-white border border-slate-200/60 rounded-2xl p-5 space-y-4 shadow-sm flex flex-col">
+              {/* REAL TIME SOCIAL ACTIVITY FEED (Instagram styling, live updates) */}
+          <div className="bg-white border border-slate-200/60 rounded-2xl p-5 space-y-4 shadow-sm flex flex-col font-sans">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">Audit logs Feed</h4>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="System synchronizer active" />
+              <div>
+                <h4 className="text-xs font-black uppercase text-slate-800 tracking-wider">Recent Activity Feed</h4>
+                <p className="text-[10px] text-slate-400 font-medium">Business actions live streamline</p>
+              </div>
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" title="Live stream listening..." />
             </div>
 
             <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
-              {todaysActivities.map((log, idx) => (
-                <div key={log.id || idx} className="text-xs space-y-1 border-l-2 border-slate-200 pl-3.5 pb-2 ml-1 relative">
-                  <div className="absolute w-2 h-2 bg-blue-500 rounded-full -left-[5px] top-1" />
-                  <div className="flex justify-between text-slate-400 text-[10px] font-mono">
-                    <span>{log.ruleName || log.triggerEvent || "System Event"}</span>
-                    <span>{log.timestamp ? log.timestamp.split(" ")[1] : "Now"}</span>
+              {activityFeed.map((feedItem, idx) => {
+                const colors = ["bg-blue-105 text-blue-700", "bg-emerald-105 text-emerald-700", "bg-indigo-105 text-indigo-700", "bg-violet-105 text-violet-700", "bg-amber-105 text-amber-700"];
+                const col = colors[idx % colors.length] || "bg-slate-100 text-slate-600";
+                const initial = feedItem.user ? feedItem.user.substring(0, 1).toUpperCase() : "R";
+                
+                return (
+                  <div key={feedItem.id || idx} className="flex items-start gap-3 p-2 hover:bg-slate-50/70 rounded-xl transition-all duration-150">
+                    <div className={`w-8 h-8 rounded-full ${col} flex items-center justify-center font-black text-xs shrink-0 shadow-sm`}>
+                      {initial}
+                    </div>
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <p className="text-xs text-slate-800 font-semibold leading-snug">
+                        {feedItem.text}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[9px] text-slate-400 font-mono">
+                        <span className="font-extrabold uppercase text-slate-300">●</span>
+                        <span>{feedItem.time || "Just now"}</span>
+                        {feedItem.module && (
+                          <>
+                            <span className="text-slate-300">|</span>
+                            <span className="text-blue-600 uppercase font-bold tracking-wider">{feedItem.module}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-slate-750 font-semibold leading-relaxed break-words">{log.actionTaken || log.timestamp}</p>
-                </div>
-              ))}
-              {todaysActivities.length === 0 && (
-                <div className="text-center py-10 text-xs text-slate-400">
-                  No automation activity triggered yet. Let some event fire to populate audit rails.
+                );
+              })}
+              
+              {activityFeed.length === 0 && (
+                <div className="space-y-2 py-8 text-center text-slate-400">
+                  <div className="text-xs font-medium">Stream pristine. No user-triggered activity yet.</div>
+                  <p className="text-[10px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">
+                    Try adding an employee, creating invoices or saving customers to generate live feed cards!
+                  </p>
                 </div>
               )}
             </div>
-          </div>
+          </div>        </div>
 
         </div>
 

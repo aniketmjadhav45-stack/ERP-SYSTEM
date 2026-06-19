@@ -61,88 +61,49 @@ const generateUsers = (): UserProfile[] => {
   
   // -- TATA AGRO (tenant_acme) --
   users.push({
-    id: "user_super",
-    email: "super@tataagro.co.in",
-    name: "Sarah Jenkins",
-    role: Role.SUPER_ADMIN,
-    tenantId: "tenant_acme",
-    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Executive Board",
-    phone: "+91 98200 12345",
-    salary: 250000,
-    skills: ["Strategic Planning", "MCA Filings", "Corporate Tax"]
-  });
-
-  users.push({
-    id: "user_admin",
+    id: "EMP-001",
     email: "admin@tataagro.co.in",
-    name: "Marcus Fletcher",
+    name: "Aniket Jadhav",
     role: Role.ADMIN,
     tenantId: "tenant_acme",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Operations",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Executive Management",
     phone: "+91 98200 45678",
-    salary: 180000,
-    skills: ["Operations", "SaaS Management"]
+    salary: 180005,
+    skills: ["Company Governance", "Strategic Administration"]
   });
 
   users.push({
-    id: "user_hr",
-    email: "hr@tataagro.co.in",
-    name: "Devon Alistair",
-    role: Role.HR,
-    tenantId: "tenant_acme",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Human Resources",
-    phone: "+91 91100 55555",
-    salary: 110000,
-    skills: ["Talent Sourcing", "E-Grants", "PF Regulations"]
-  });
-
-  users.push({
-    id: "user_manager",
+    id: "EMP-002",
     email: "manager@tataagro.co.in",
-    name: "Clara Oswald",
+    name: "Vikram Malhotra",
     role: Role.MANAGER,
     tenantId: "tenant_acme",
-    avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces&q=80",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces&q=80",
     department: "Information Technology",
     phone: "+91 98800 66666",
     salary: 150000,
-    skills: ["SAP Integration", "Express.js", "DB Indexing"]
+    skills: ["Infrastructure Operations", "Team Leadership"]
   });
 
   users.push({
-    id: "user_sales",
-    email: "sales@tataagro.co.in",
-    name: "Alex Mercer",
-    role: Role.SALES,
+    id: "EMP-003",
+    email: "employee@tataagro.co.in",
+    name: "Rahul Verma",
+    role: Role.EMPLOYEE,
     tenantId: "tenant_acme",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Global Sales",
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Engineering Development",
     phone: "+91 97700 88888",
     salary: 95000,
-    skills: ["Direct Selling", "Negotiation", "B2B CRM"]
-  });
-
-  users.push({
-    id: "user_finance",
-    email: "finance@tataagro.co.in",
-    name: "Sophia Reynolds",
-    role: Role.FINANCE,
-    tenantId: "tenant_acme",
-    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Finance & Accounts",
-    phone: "+91 96600 99999",
-    salary: 135000,
-    skills: ["GST Auditing", "Tally ERP", "Payroll Allocations"]
+    skills: ["Software Engineering", "Product Implementation"]
   });
 
   // -- RELIANCE INFRA (tenant_nebula) --
   users.push({
-    id: "user_admin_nebula",
+    id: "EMP-004",
     email: "admin@relinfra.co.in",
-    name: "Anil Ambani",
+    name: "Amit Sharma",
     role: Role.ADMIN,
     tenantId: "tenant_nebula",
     avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&crop=faces&q=80",
@@ -153,85 +114,70 @@ const generateUsers = (): UserProfile[] => {
   });
 
   users.push({
-    id: "user_hr_nebula",
-    email: "hr@relinfra.co.in",
-    name: "Pooja Deshmukh",
-    role: Role.HR,
+    id: "EMP-005",
+    email: "manager@relinfra.co.in",
+    name: "Priya Sen",
+    role: Role.MANAGER,
     tenantId: "tenant_nebula",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces&q=80",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces&q=80",
     department: "Human Resources",
     phone: "+91 91200 44556",
-    salary: 115000,
-    skills: ["Recruiting", "Employee Care"]
+    salary: 140000,
+    skills: ["Personnel Management", "Conflict Resolution"]
   });
 
   users.push({
-    id: "user_finance_nebula",
-    email: "finance@relinfra.co.in",
-    name: "Sameer Joshi",
-    role: Role.FINANCE,
+    id: "EMP-006",
+    email: "employee@relinfra.co.in",
+    name: "Sameer Patel",
+    role: Role.EMPLOYEE,
     tenantId: "tenant_nebula",
-    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Finance & Accounts",
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Operations",
     phone: "+91 96200 11223",
-    salary: 125000,
-    skills: ["Audit", "Balance Sheets"]
+    salary: 80000,
+    skills: ["Ground Support", "Reporting"]
   });
 
   // -- BIRLA SPUN PIPES (tenant_quantum) --
   users.push({
-    id: "user_admin_quantum",
+    id: "EMP-007",
     email: "admin@birlaspun.co.in",
     name: "Kumar Birla",
     role: Role.ADMIN,
     tenantId: "tenant_quantum",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces&q=80",
     department: "Executive Committee",
     phone: "+91 99300 22114",
     salary: 210000,
-    skills: ["Heavy Operations", "Logistics Mapping"]
+    skills: ["Heavy Operations", "Industrial Systems"]
   });
 
   users.push({
-    id: "user_hr_quantum",
-    email: "hr@birlaspun.co.in",
+    id: "EMP-008",
+    email: "manager@birlaspun.co.in",
     name: "Meera Nair",
-    role: Role.HR,
+    role: Role.MANAGER,
     tenantId: "tenant_quantum",
     avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=faces&q=80",
-    department: "Human Resources",
+    department: "Quality Control",
     phone: "+91 95400 33221",
-    salary: 112000,
-    skills: ["Sourcing", "Employee Engagement"]
+    salary: 155000,
+    skills: ["Standard Verification", "Regulatory Compliance"]
   });
 
-  // Programmatically generate remaining 40 users divided evenly across all 3
-  for (let i = 1; i <= 39; i++) {
-    const tenantsList = ["tenant_acme", "tenant_nebula", "tenant_quantum"];
-    const domainsList = ["tataagro.co.in", "relinfra.co.in", "birlaspun.co.in"];
-    const idx = i % 3;
-    const tId = tenantsList[idx];
-    const uDomain = domainsList[idx];
-
-    const fName = IndianFirstNames[i % IndianFirstNames.length];
-    const lName = IndianLastNames[(i + Math.floor(i / 10)) % IndianLastNames.length];
-    const departmentName = defaultDepartments[i % defaultDepartments.length];
-    const rolesPool = [Role.EMPLOYEE, Role.MANAGER, Role.EMPLOYEE, Role.EMPLOYEE];
-    const assignedRole = rolesPool[i % rolesPool.length];
-    
-    users.push({
-      id: `EMP-2026-0${100 + i}`,
-      email: `${fName.toLowerCase()}.${lName.toLowerCase()}${i}@${uDomain}`,
-      name: `${fName} ${lName}`,
-      role: assignedRole,
-      tenantId: tId,
-      avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + (i * 2500000)}?w=100&h=100&fit=crop&crop=faces&q=80`,
-      department: departmentName,
-      phone: `+91 98450 ${20000 + i * 171}`,
-      salary: 45000 + (i % 6) * 15000,
-      skills: ["General Business Ops", "Problem Solving", "ERP Basics", "Collaborative Suite"]
-    });
-  }
+  users.push({
+    id: "EMP-009",
+    email: "employee@birlaspun.co.in",
+    name: "Karan Joshi",
+    role: Role.EMPLOYEE,
+    tenantId: "tenant_quantum",
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Plant Operations",
+    phone: "+91 91100 55555",
+    salary: 85000,
+    skills: ["Facility Support", "Machine Operations"]
+  });
 
   return users;
 };
