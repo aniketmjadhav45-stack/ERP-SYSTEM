@@ -56,68 +56,66 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 selection:bg-indigo-500 selection:text-white" id="auth-container">
-      {/* Visual background lights */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-2/3 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="w-full max-w-4xl bg-slate-900/40 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 relative z-10">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 selection:bg-blue-600 selection:text-white" id="auth-container">
+      
+      <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-12 relative z-10">
         
         {/* Left Brand Area */}
-        <div className="md:col-span-5 bg-gradient-to-br from-indigo-950 to-slate-950 p-8 flex flex-col justify-between border-r border-slate-800">
+        <div className="md:col-span-5 bg-gradient-to-br from-blue-700 to-blue-800 p-8 flex flex-col justify-between border-r border-slate-200 text-white">
           <div>
-            <div className="flex items-center gap-2 mb-8">
-              <div className="p-2 bg-indigo-600 rounded-lg shadow-lg">
-                <Building2 className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2 mb-8 animate-fadeIn">
+              <div className="p-2 bg-white rounded-lg shadow-sm">
+                <Building2 className="w-6 h-6 text-blue-700" />
               </div>
-              <span className="font-extrabold text-xl font-sans tracking-tight text-white bg-clip-text">
-                CLOUD<span className="text-indigo-400">ERP</span>
+              <span className="font-extrabold text-xl font-sans tracking-tight text-white">
+                INDIAN<span className="text-blue-200">ERP</span>
               </span>
             </div>
 
-            <h1 className="text-2xl font-bold text-slate-100 leading-snug tracking-tight mb-4">
+            <h1 className="text-2xl font-bold text-white leading-snug tracking-tight mb-4">
               Modern SaaS Resource Orchestration Engine.
             </h1>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-blue-100 leading-relaxed font-medium">
               Consolidate sales CRM pipelines, dynamic HR payroll systems, agile milestones checks, inventory supplier alerts, invoices, and server-side Gemini intelligence in a single interface.
             </p>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-800/60">
+          <div className="mt-8 pt-6 border-t border-blue-600/60">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs text-slate-300 font-mono tracking-wider uppercase">Active Ingress Terminal</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs text-blue-50 font-mono tracking-wider uppercase">Active Ingress Terminal</span>
             </div>
-            <p className="text-[10px] text-slate-500 font-mono">
+            <p className="text-[10px] text-blue-200 font-mono">
               Host: Cloud Run Context Gateway
             </p>
           </div>
         </div>
 
         {/* Right Form Area */}
-        <div className="md:col-span-7 p-8 flex flex-col justify-center">
+        <div className="md:col-span-7 p-8 flex flex-col justify-center bg-white">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-white">Access Your Workspace</h2>
-            <p className="text-xs text-slate-400">Select business tenant domain and authenticate credentials.</p>
+            <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded inline-block mb-3">ZO-TALLY STYLE CONSOLE</span>
+            <h2 className="text-lg font-bold text-slate-900 leading-none">Access Your Workspace</h2>
+            <p className="text-xs text-slate-500 mt-1.5">Select business tenant domain and authenticate credentials.</p>
           </div>
 
           {/* Tenant Selector */}
           <div className="mb-6">
-            <label className="block text-xs font-semibold text-slate-300 mb-2">Tenant Node</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Select Active Tenant Name</label>
             <div className="grid grid-cols-2 gap-3">
               {defaultTenants.map((t) => (
                 <button
                   type="button"
                   key={t.id}
                   onClick={() => setSelectedTenant(t)}
-                  className={`p-3 rounded-lg border text-left transition-all ${
+                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
                     selectedTenant.id === t.id
-                      ? "border-indigo-500 bg-indigo-500/10 text-white"
-                      : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700"
+                      ? "border-blue-600 bg-blue-50/50 text-slate-905"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-350"
                   }`}
                 >
-                  <div className="text-xs font-bold">{t.name}</div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-1">{t.domain}</div>
+                  <div className="text-xs font-bold text-slate-900">{t.name}</div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1">{t.domain}</div>
                 </button>
               ))}
             </div>
@@ -126,7 +124,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           {/* Authentication Options tab/form */}
           <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Workspace Email</label>
+              <label className="block text-xs font-bold text-slate-705 mb-1.5">Workspace Email</label>
               <input
                 type="email"
                 placeholder="e.g., manager@acme.erp.com"
@@ -135,23 +133,23 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                   setEmail(e.target.value);
                   setErrorMessage("");
                 }}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500 focus:outline-none rounded-lg p-2.5 text-xs text-slate-200 transition-all font-mono"
+                className="w-full bg-white border border-slate-200 focus:border-blue-500 focus:outline-none rounded-lg p-2.5 text-xs text-slate-800 transition-all font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+              <label className="block text-xs font-bold text-slate-705 mb-1.5">Password</label>
               <input
                 type="password"
                 placeholder="••••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500 focus:outline-none rounded-lg p-2.5 text-xs text-slate-200 transition-all"
+                className="w-full bg-white border border-slate-200 focus:border-blue-500 focus:outline-none rounded-lg p-2.5 text-xs text-slate-800 transition-all font-sans"
               />
             </div>
 
             {errorMessage && (
-              <div className="bg-red-950/50 border border-red-900 p-2 text-[11px] text-red-300 rounded flex items-center gap-1.5 font-mono">
+              <div className="bg-rose-50 border border-rose-200 p-2 text-[11px] text-rose-800 rounded-lg flex items-center gap-1.5 font-mono">
                 <ShieldAlert className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>{errorMessage}</span>
               </div>
@@ -160,7 +158,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
             <div className="grid grid-cols-2 gap-3 pt-2">
               <button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
               >
                 <Key className="w-3.5 h-3.5" />
                 <span>Email Login</span>
@@ -170,7 +168,7 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                 type="button"
                 onClick={handleGoogleLoginSimulate}
                 disabled={isGoogleLogin}
-                className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-semibold text-xs py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-bold text-xs py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 <span className="text-[10px] uppercase font-mono">G</span>
                 <span>{isGoogleLogin ? "Connecting..." : "Google Log In"}</span>
@@ -179,20 +177,20 @@ export default function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           </form>
 
           {/* Quick Role Presets Selector - Extremely useful for preview testing */}
-          <div className="mt-8 pt-6 border-t border-slate-800">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300 mb-2">
-              <Sparkles className="w-3 text-indigo-400" />
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-25">
+              <Sparkles className="w-3 text-blue-600" />
               <span>Developer Quick Logins (Select Role Perspective)</span>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mt-2">
               {defaultUsers.map((u) => (
                 <button
                   type="button"
                   key={u.id}
                   onClick={() => handlePresetLogin(u)}
-                  className="bg-slate-900/80 hover:bg-indigo-950/40 text-[10px] text-slate-300 border border-slate-800 hover:border-indigo-500 px-2 py-1 rounded transition-all flex items-center gap-1 cursor-pointer font-mono"
+                  className="bg-slate-50 hover:bg-blue-50 text-[10px] text-slate-700 border border-slate-200 hover:border-blue-500 px-2 py-1 rounded transition-all flex items-center gap-1 cursor-pointer font-mono font-medium"
                 >
-                  <UserCheck className="w-2.5 h-2.5 text-indigo-400 flex-shrink-0" />
+                  <UserCheck className="w-2.5 h-2.5 text-blue-600 flex-shrink-0" />
                   <span>{u.role} ({u.name.split(" ")[0]})</span>
                 </button>
               ))}

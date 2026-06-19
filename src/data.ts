@@ -1,80 +1,246 @@
 import { Role, Tenant, UserProfile, Lead, Contact, Attendance, LeaveRequest, PayrollRecord, Project, Task, Invoice, Expense, Product, Supplier, AutomationRule, AutomationLog } from "./types";
 
+// Multi-tenant initial definitions
 export const defaultTenants: Tenant[] = [
-  { id: "tenant_acme", name: "Acme Enterprises Ltd", domain: "acme.erp.com", plan: "Enterprise", createdAt: "2024-01-10" },
-  { id: "tenant_nebula", name: "Nebula Digital Systems", domain: "nebula.erp.com", plan: "Growth", createdAt: "2025-03-15" }
+  { id: "tenant_acme", name: "Tata Agro Pvt Ltd", domain: "tataagro.erp.co.in", plan: "Enterprise", createdAt: "2024-01-10" },
+  { id: "tenant_nebula", name: "Reliance Infra Ltd", domain: "relinfra.erp.co.in", plan: "Growth", createdAt: "2025-03-15" }
 ];
 
-export const defaultUsers: UserProfile[] = [
-  { id: "user_super", email: "super@acme.erp.com", name: "Sarah Jenkins", role: Role.SUPER_ADMIN, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces&q=80", department: "Executive Board", phone: "+1 (555) 019-2834" },
-  { id: "user_admin", email: "admin@acme.erp.com", name: "Marcus Fletcher", role: Role.ADMIN, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces&q=80", department: "Operations", phone: "+1 (555) 012-3456" },
-  { id: "user_manager", email: "manager@acme.erp.com", name: "Clara Oswald", role: Role.MANAGER, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces&q=80", department: "Product Team", phone: "+1 (555) 013-4567" },
-  { id: "user_hr", email: "hr@acme.erp.com", name: "Devon Alistair", role: Role.HR, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80", department: "Human Resources", phone: "+1 (555) 014-5678" },
-  { id: "user_sales", email: "sales@acme.erp.com", name: "Alex Mercer", role: Role.SALES, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces&q=80", department: "Global Sales", phone: "+1 (555) 015-6789" },
-  { id: "user_finance", email: "finance@acme.erp.com", name: "Sophia Reynolds", role: Role.FINANCE, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces&q=80", department: "Treasury Team", phone: "+1 (555) 016-7890" },
-  { id: "user_employee", email: "employee@acme.erp.com", name: "Jared Leto", role: Role.EMPLOYEE, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&crop=faces&q=80", department: "Engineering", phone: "+1 (555) 017-8901", salary: 7500, skills: ["React", "TypeScript", "Node.js"] },
-  { id: "user_customer", email: "customer@example.net", name: "David Miller", role: Role.CUSTOMER, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces&q=80", department: "External Core", phone: "+1 (555) 018-9012" },
-  { id: "user_vendor", email: "contractors@vandex.com", name: "Vandex Supplies", role: Role.VENDOR, tenantId: "tenant_acme", avatarUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces&q=80", department: "External Logistics", phone: "+1 (555) 019-0123" }
+// 10 Departments
+export const defaultDepartments = [
+  "Information Technology",
+  "Finance & Accounts",
+  "Human Resources",
+  "Global Sales",
+  "Marketing",
+  "Engineering",
+  "Operations",
+  "Legal & Compliance",
+  "Procurement",
+  "Quality Assurance"
 ];
 
+// 5 Branches
+export const defaultBranches = [
+  "Mumbai HQ",
+  "Bengaluru Tech Park",
+  "New Delhi Corporate Office",
+  "Chennai Unit",
+  "Pune R&D Center"
+];
+
+// 10 Teams
+export const defaultTeams = [
+  "Core Platform",
+  "Tax Compliance",
+  "Talent Acquisition",
+  "Enterprise Sales",
+  "Digital Marketing",
+  "Logistics & Dispatch",
+  "Security Auditing",
+  "Quality Excellence",
+  "Plant Automation",
+  "R&D Lab 1"
+];
+
+const IndianFirstNames = [
+  "Amit", "Rajiv", "Aditi", "Sameer", "Neha", "Priya", "Vikram", "Rohan", "Sanjay", "Karan", 
+  "Ananya", "Devendra", "Deepak", "Aravind", "Meera", "Shreya", "Abhishek", "Vijay", "Sandhya", "Suresh", 
+  "Dinesh", "Nisha", "Manish", "Sunita", "Tarun", "Ketan", "Rohit", "Vivek", "Pallavi", "Pooja"
+];
+
+const IndianLastNames = [
+  "Sharma", "Verma", "Swamy", "Deshmukh", "Singhal", "Panday", "Johar", "Patel", "Mehta", "Iyer", 
+  "Joshi", "Chawla", "Shenoy", "Gupta", "Bose", "Menon", "Reddy", "Nair", "Kulkarni", "Jadhav"
+];
+
+// Generate exactly 50 employees/user profiles
+const generateUsers = (): UserProfile[] => {
+  const users: UserProfile[] = [];
+  
+  // Seed a super admin, admin, hr, manager, finance, sales first
+  users.push({
+    id: "user_super",
+    email: "super@tataagro.co.in",
+    name: "Sarah Jenkins",
+    role: Role.SUPER_ADMIN,
+    tenantId: "tenant_acme",
+    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Executive Board",
+    phone: "+91 98200 12345",
+    salary: 250000,
+    skills: ["Strategic Planning", "MCA Filings", "Corporate Tax"]
+  });
+
+  users.push({
+    id: "user_admin",
+    email: "admin@tataagro.co.in",
+    name: "Marcus Fletcher",
+    role: Role.ADMIN,
+    tenantId: "tenant_acme",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Operations",
+    phone: "+91 98200 45678",
+    salary: 180000,
+    skills: ["Operations", "SaaS Management"]
+  });
+
+  users.push({
+    id: "user_hr",
+    email: "hr@tataagro.co.in",
+    name: "Devon Alistair",
+    role: Role.HR,
+    tenantId: "tenant_acme",
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Human Resources",
+    phone: "+91 91100 55555",
+    salary: 110000,
+    skills: ["Talent Sourcing", "E-Grants", "PF Regulations"]
+  });
+
+  users.push({
+    id: "user_manager",
+    email: "manager@tataagro.co.in",
+    name: "Clara Oswald",
+    role: Role.MANAGER,
+    tenantId: "tenant_acme",
+    avatarUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Information Technology",
+    phone: "+91 98800 66666",
+    salary: 150000,
+    skills: ["SAP Integration", "Express.js", "DB Indexing"]
+  });
+
+  users.push({
+    id: "user_sales",
+    email: "sales@tataagro.co.in",
+    name: "Alex Mercer",
+    role: Role.SALES,
+    tenantId: "tenant_acme",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Global Sales",
+    phone: "+91 97700 88888",
+    salary: 95000,
+    skills: ["Direct Selling", "Negotiation", "B2B CRM"]
+  });
+
+  users.push({
+    id: "user_finance",
+    email: "finance@tataagro.co.in",
+    name: "Sophia Reynolds",
+    role: Role.FINANCE,
+    tenantId: "tenant_acme",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Finance & Accounts",
+    phone: "+91 96600 99999",
+    salary: 135000,
+    skills: ["GST Auditing", "Tally ERP", "Payroll Allocations"]
+  });
+
+  // Programmatically generate remaining 44 users to complete exactly 50
+  for (let i = 1; i <= 44; i++) {
+    const fName = IndianFirstNames[i % IndianFirstNames.length];
+    // Add variations to avoid duplicate names
+    const lName = IndianLastNames[(i + Math.floor(i / 10)) % IndianLastNames.length];
+    const departmentName = defaultDepartments[i % defaultDepartments.length];
+    const rolesPool = [Role.EMPLOYEE, Role.MANAGER, Role.EMPLOYEE, Role.EMPLOYEE];
+    const assignedRole = rolesPool[i % rolesPool.length];
+    
+    users.push({
+      id: `EMP-2026-0${100 + i}`,
+      email: `${fName.toLowerCase()}.${lName.toLowerCase()}${i}@tataagro.co.in`,
+      name: `${fName} ${lName}`,
+      role: assignedRole,
+      tenantId: "tenant_acme",
+      avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + (i * 2500000)}?w=100&h=100&fit=crop&crop=faces&q=80`,
+      department: departmentName,
+      phone: `+91 98450 ${20000 + i * 171}`,
+      salary: 45000 + (i % 6) * 15000,
+      skills: ["General Business Ops", "Problem Solving", "ERP Basics", "Collaborative Suite"]
+    });
+  }
+
+  return users;
+};
+
+export const defaultUsers: UserProfile[] = generateUsers();
+
+// Leads pipeline elements
 export const defaultLeads: Lead[] = [
   {
     id: "lead_1",
-    name: "Jessica Jones",
-    company: "Marvelous Tech Corp",
-    email: "jj@marveltech.com",
-    phone: "+1 (555) 234-9090",
-    value: 75000,
+    name: "Homi Bhabha",
+    company: "Tata Motors Commercial",
+    email: "hb@tatamotors.com",
+    phone: "+91 22 6656 1212",
+    value: 7500000,
     status: "Qualified",
     assignedTo: "Alex Mercer",
     createdAt: "2026-05-12",
     updatedAt: "2026-06-15",
-    notes: "Very interested in dynamic integrations and automated financial reporting modules. Budget approved.",
+    notes: "Requires complete custom payroll automation matching Indian PF regulations and Form-16 exports.",
     timeline: [
-      { id: "tl_1", type: "email", text: "Sent technical spec document.", date: "2026-06-15" },
-      { id: "tl_2", type: "meeting", text: "Demo call completed. Evaluated payroll and timesheet workflow.", date: "2026-06-10" },
-      { id: "tl_3", type: "call", text: "Initial discovery session. Formulating custom quote.", date: "2026-05-18" }
+      { id: "tl_1", type: "email", text: "Sent custom e-payroll brochure and tax compliance sheet.", date: "2026-06-15" },
+      { id: "tl_2", type: "meeting", text: "Completed product demonstration deck with finance specialists.", date: "2026-06-10" }
     ]
   },
   {
     id: "lead_2",
-    name: "Thomas Wayne",
-    company: "Wayne Enterprises",
-    email: "ceo@waynecorp.com",
-    phone: "+1 (555) 999-bat1",
-    value: 350000,
+    name: "Mukesh Ambani",
+    company: "Reliance Retail",
+    email: "mukesh@ril.com",
+    phone: "+91 22 3550 4400",
+    value: 23500000,
     status: "Proposal",
     assignedTo: "Alex Mercer",
     createdAt: "2026-04-01",
     updatedAt: "2026-06-17",
-    notes: "Requires a massive custom inventory management tracking system mapped across 12 satellite storage depots.",
+    notes: "High capacity multi-warehouse inventory scheduler with automated reorder dispatch to Swaraj vendors.",
     timeline: [
-      { id: "tl_4", type: "status", text: "Status changed to Proposal by Alex Mercer", date: "2026-06-17" },
-      { id: "tl_5", type: "meeting", text: "Formal RFP submitted and under executive review.", date: "2026-06-02" }
+      { id: "tl_4", type: "status", text: "Promoted to Proposal by Alex Mercer", date: "2026-06-17" }
     ]
   },
   {
     id: "lead_3",
-    name: "Arthur Dent",
-    company: "Megadodo Publications",
-    email: "guide@hitchhiker.org",
-    phone: "+44 20 7946 0958",
-    value: 42000,
+    name: "Narayan Murthy",
+    company: "Infosys Mysuru",
+    email: "nmurthy@infosys.com",
+    phone: "+91 80 2852 0261",
+    value: 920000,
     status: "Contacted",
     assignedTo: "Sarah Jenkins",
     createdAt: "2026-06-01",
     updatedAt: "2026-06-03",
-    notes: "Evaluating general project milestones templates and email automation systems. Needs standard SaaS layout.",
+    notes: "Reviewing lightweight team performance scorecard tracking options. Budget defined in Q3.",
     timeline: [
-      { id: "tl_6", type: "call", text: "Called for initial setup overview. Promised template checklists.", date: "2026-06-03" }
+      { id: "tl_6", type: "call", text: "Cold discovery call completed. Customer was dynamic but compliant.", date: "2026-06-03" }
     ]
   }
 ];
 
+// Add extra dynamic leads to round up CRM if needed
+for (let i = 4; i <= 15; i++) {
+  const compNames = ["Airtel Towers", "Wipro Cloud", "Delhi Metro Corp", "MRF Tyres Chennai", "Grasim Textile"];
+  defaultLeads.push({
+    id: `lead_${i}`,
+    name: `${IndianFirstNames[i % IndianFirstNames.length]} ${IndianLastNames[i % IndianLastNames.length]}`,
+    company: compNames[i % compNames.length] + ` Unit ${i}`,
+    email: `contact${i}@${compNames[i % compNames.length].toLowerCase().replace(/\s/g, "")}.in`,
+    phone: `+91 99000 ${10000 + i * 500}`,
+    value: 1200000 + (i % 5) * 600000,
+    status: i % 3 === 0 ? "Qualified" : i % 3 === 1 ? "New" : "Negotiation",
+    assignedTo: "Alex Mercer",
+    createdAt: "2026-05-18",
+    updatedAt: "2026-06-18",
+    notes: "Automated Lead Captured via website portal.",
+    timeline: [{ id: `tl_auto_${i}`, type: "status", text: "Inbound Lead Synced", date: "2026-06-18" }]
+  });
+}
+
 export const defaultContacts: Contact[] = [
-  { id: "c_1", name: "Jessica Jones", role: "VP Operations", company: "Marvelous Tech Corp", email: "jj@marveltech.com", phone: "+1 (555) 234-9090", lastContactDate: "2026-06-15" },
-  { id: "c_2", name: "Lucius Fox", role: "CTO", company: "Wayne Enterprises", email: "lfox@waynecorp.com", phone: "+1 (555) 999-1234", lastContactDate: "2026-06-12" },
-  { id: "c_3", name: "Trillian Astro", role: "Head of Communications", company: "Megadodo Publications", email: "trillian@megadodo.org", phone: "+44 20 7946 0199", lastContactDate: "2026-06-08" }
+  { id: "c_1", name: "Rajesh Gokhale", role: "VP Operations", company: "Hindalco Industries Ltd", email: "procurement@hindalco.adityabirla.com", phone: "+91 22 4900 8822", lastContactDate: "2026-06-15" },
+  { id: "c_2", name: "Sudha Murthy", role: "MD Foundation", company: "Infosys Mysore Campus", email: "facilities.mysore@infosys.com", phone: "+91 821 2400 901", lastContactDate: "2026-06-12" },
+  { id: "c_3", name: "Anil Ambani", role: "Chairman Corp", company: "Reliance Infra Ltd", email: "contact@relinfra.com", phone: "+91 79 3500 4400", lastContactDate: "2026-06-08" }
 ];
 
 export const defaultAttendance: Attendance[] = [
@@ -86,168 +252,203 @@ export const defaultAttendance: Attendance[] = [
 ];
 
 export const defaultLeaves: LeaveRequest[] = [
-  { id: "le_1", userId: "user_employee", userName: "Jared Leto", leaveType: "Sick", startDate: "2026-06-10", endDate: "2026-06-11", status: "Approved", reason: "Severe dental procedure followed by wisdom teeth rest.", requestedAt: "2026-06-08" },
-  { id: "le_2", userId: "user_manager", userName: "Clara Oswald", leaveType: "Annual", startDate: "2026-07-20", endDate: "2026-07-31", status: "Pending", reason: "Extended summer break with system automation offloaded to deputy.", requestedAt: "2026-06-14" },
-  { id: "le_3", userId: "user_sales", userName: "Alex Mercer", leaveType: "Personal", startDate: "2026-06-25", endDate: "2026-06-25", status: "Approved", reason: "Family commitment out of city.", requestedAt: "2026-06-12" }
+  { id: "le_1", userId: "user_employee", userName: "Jared Leto", leaveType: "Sick", startDate: "2026-06-10", endDate: "2026-06-11", status: "Approved", reason: "Severe root canal dental rest.", requestedAt: "2026-06-08" },
+  { id: "le_2", userId: "user_manager", userName: "Clara Oswald", leaveType: "Annual", startDate: "2026-07-20", endDate: "2026-07-31", status: "Pending", reason: "Summer vacation with system automated backup.", requestedAt: "2026-06-14" },
+  { id: "le_3", userId: "user_sales", userName: "Alex Mercer", leaveType: "Personal", startDate: "2026-06-25", endDate: "2026-06-25", status: "Approved", reason: "Family commitment out of state.", requestedAt: "2026-06-12" }
 ];
 
 export const defaultPayroll: PayrollRecord[] = [
-  { id: "pay_1", userId: "user_employee", userName: "Jared Leto", month: "June 2026", baseSalary: 7500, bonus: 500, deductions: 280, netPay: 7720, status: "Draft" },
-  { id: "pay_2", userId: "user_employee", userName: "Jared Leto", month: "May 2026", baseSalary: 7500, bonus: 0, deductions: 280, netPay: 7220, status: "Paid", paymentDate: "2026-05-30" },
-  { id: "pay_3", userId: "user_sales", userName: "Alex Mercer", month: "June 2026", baseSalary: 6200, bonus: 1800, deductions: 210, netPay: 7790, status: "Approved" },
-  { id: "pay_4", userId: "user_manager", userName: "Clara Oswald", month: "June 2026", baseSalary: 9100, bonus: 1200, deductions: 350, netPay: 9950, status: "Draft" }
+  { id: "pay_1", userId: "user_employee", userName: "Jared Leto", month: "June 2026", baseSalary: 75000, bonus: 5000, deductions: 2800, netPay: 77200, status: "Draft" },
+  { id: "pay_2", userId: "user_employee", userName: "Jared Leto", month: "May 2026", baseSalary: 75000, bonus: 0, deductions: 2800, netPay: 72200, status: "Paid", paymentDate: "2026-05-30" },
+  { id: "pay_3", userId: "user_sales", userName: "Alex Mercer", month: "June 2026", baseSalary: 62000, bonus: 18000, deductions: 2100, netPay: 77900, status: "Approved" },
+  { id: "pay_4", userId: "user_manager", userName: "Clara Oswald", month: "June 2026", baseSalary: 121000, bonus: 12000, deductions: 3500, netPay: 129500, status: "Draft" }
 ];
 
-export const defaultProjects: Project[] = [
-  {
-    id: "proj_1",
-    name: "Enterprise ERP Upgrade",
-    description: "Multi-tenant deployment of core accounting and real-time CRM updates for global rollout.",
-    clientName: "Wayne Enterprises",
-    startDate: "2026-05-10",
-    endDate: "2026-11-30",
-    budget: 180000,
-    status: "In Progress",
-    progress: 45,
-    milestones: ["Requirements sign-off", "Prototype interface complete", "Database migration done", "User testing alpha"]
-  },
-  {
-    id: "proj_2",
-    name: "Automated Supply Chain Integration",
-    description: "Designing real-time triggers mapping product SKUs directly with low-stock warnings and vendor purchase generation.",
-    clientName: "Marvelous Tech Corp",
-    startDate: "2026-06-01",
-    endDate: "2026-09-15",
-    budget: 95000,
-    status: "In Progress",
-    progress: 20,
-    milestones: ["API specification matching", "Inventory module integration", "Vendor secure sign-on", "Deploy production pipeline"]
-  }
-];
+// Generate exactly 20 Projects
+const generateProjects = (): Project[] => {
+  const projs: Project[] = [];
+  const clientNamesPool = [
+    "Hindalco Industries Ltd", "Infosys Mysore Campus", "Godrej Properties", 
+    "Tata Motors Commercial", "Reliance Retail", "Wipro Cloud Solutions"
+  ];
+  
+  const statusPool: ("Planning" | "In Progress" | "On Hold" | "Completed")[] = [
+    "In Progress", "Planning", "Completed", "On Hold", "In Progress"
+  ];
 
-export const defaultTasks: Task[] = [
-  {
-    id: "task_1",
-    projectId: "proj_1",
-    title: "Database Indexing & Sharding Strategy",
-    description: "Address latency during massive transaction queries. Implement partition tags based on tenantId filters.",
-    status: "In Progress",
-    priority: "High",
-    dueDate: "2026-06-25",
-    assignedTo: "Jared Leto",
-    subtasks: [
-      { id: "st_1", title: "Analyze telemetry logs", completed: true },
-      { id: "st_2", title: "Implement compound columns", completed: false },
-      { id: "st_3", title: "Run parallel queries test suite", completed: false }
-    ],
-    createdAt: "2026-06-10"
-  },
-  {
-    id: "task_2",
-    projectId: "proj_1",
-    title: "Secure Google OpenID Integration",
-    description: "Migrate client callbacks into robust server-side verified token assertions. Formulate mock payload overrides.",
-    status: "Completed",
-    priority: "Medium",
-    dueDate: "2026-06-18",
-    assignedTo: "Jared Leto",
-    subtasks: [
-      { id: "st_4", title: "Expose secure express callback route", completed: true },
-      { id: "st_5", title: "Formulate claims structure matching roles", completed: true }
-    ],
-    createdAt: "2026-06-12"
-  },
-  {
-    id: "task_3",
-    projectId: "proj_2",
-    title: "Supplier Stock Alert Automation Rule",
-    description: "Build visual conditions interface enabling notifications when quantity drops below stock reorder threshold.",
-    status: "Backlog",
-    priority: "High",
-    dueDate: "2026-07-02",
-    assignedTo: "Clara Oswald",
-    subtasks: [
-      { id: "st_6", title: "Bind products schema with rules conditions", completed: false },
-      { id: "st_7", title: "Create custom webhook dispatch triggers", completed: false }
-    ],
-    createdAt: "2026-06-14"
+  const projectTopics = [
+    "ERP Localization Core", "GSTR Tax Filing Pipeline", "B2B Dispatch Scheduling", "HRMS Leave Automation",
+    "Smart Warehouse SKU Radar", "Chennai Fab Solar Grid", "MCA Filing Optimizer", "E-Invoicing Direct API",
+    "Bengal Precision Calibration", "Tata Agro R&D Ledger", "Adani Solar Power Phase-IV", "Mumbai HQ Network Refit",
+    "Noida Server Safe Migrations", "Pune Depot R&D Hub", "Wipro Cloud Safe Sync", "Gujarat Freight Line Opt",
+    "PF Slip Form-16 Exporter", "ICICI Core Settlement Connect", "Airtel BHIM Gateway Node", "Reliance Retail Checkout Pro"
+  ];
+
+  for (let i = 0; i < 20; i++) {
+    const idx = i;
+    const progressVal = idx % 4 === 0 ? 100 : idx % 3 === 0 ? 0 : 25 + (idx * 3.5) % 70;
+    
+    projs.push({
+      id: `proj_${idx + 1}`,
+      name: projectTopics[idx % projectTopics.length],
+      description: `Comprehensive integration and logistics setup for our Indian partner division mapped under corporate compliance guidelines.`,
+      clientName: clientNamesPool[idx % clientNamesPool.length],
+      startDate: "2026-05-10",
+      endDate: "2026-11-30",
+      budget: 450000 + (idx * 135000),
+      status: progressVal === 100 ? "Completed" : progressVal === 0 ? "Planning" : statusPool[idx % statusPool.length],
+      progress: Math.floor(progressVal),
+      milestones: ["Kickoff Signoff", "Database Index Setup", "API Token Verified", "Deployment Production Ready"]
+    });
   }
-];
+  return projs;
+};
+
+export const defaultProjects: Project[] = generateProjects();
+
+// Generate exactly 200 Tasks mapped across projects and people
+const generateTasks = (): Task[] => {
+  const tArr: Task[] = [];
+  const taskKeywords = [
+    "Optimize partition index", "Configure GSTIN verification payload", "Validate PAN verification callback", 
+    "Verify PF rules compliance", "Draft MCA corporate filing", "Submit Form-16 to test board", 
+    "Calibrate optical bridge node", "Audit warehouse stock SKU limit", "Design BHIM UPI payment form", 
+    "Implement SSL credential validation", "Authorize manager expense limits", "Refactor Express API controllers",
+    "Build beautiful clickup visual boards", "Test multi-branch latency speeds", "Export CSV payroll logs",
+    "Assemble team scorecard values", "Implement auto birthday reminder trigger", "Verify Aadhaar documentation checklist",
+    "Test GSTR-1 excel import script", "Draft Swaraj Castings steel request"
+  ];
+
+  const priorityPool: ("High" | "Medium" | "Low")[] = ["High", "Medium", "Low", "Medium"];
+  const statusPool: ("Backlog" | "In Progress" | "In Review" | "Completed")[] = ["Completed", "In Progress", "In Review", "Backlog"];
+
+  for (let i = 0; i < 200; i++) {
+    const projIdx = (i % 20) + 1;
+    const assignee = defaultUsers[i % defaultUsers.length];
+    const taskStatus = i % 5 === 0 ? "Completed" as const : statusPool[i % statusPool.length];
+    
+    tArr.push({
+      id: `task_${i + 1}`,
+      projectId: `proj_${projIdx}`,
+      title: `${taskKeywords[i % taskKeywords.length]} #${i + 101}`,
+      description: `Logistical action block to optimize and complete deliverable parameters under supervisory board rules.`,
+      status: taskStatus,
+      priority: priorityPool[i % priorityPool.length],
+      dueDate: `2026-06-${20 + (i % 10)}`,
+      assignedTo: assignee.name,
+      subtasks: [
+        { id: `st_${i}_1`, title: "Review corporate spec", completed: true },
+        { id: `st_${i}_2`, title: "Execute staging build run", completed: i % 2 === 0 }
+      ],
+      createdAt: "2026-06-01"
+    });
+  }
+  return tArr;
+};
+
+export const defaultTasks: Task[] = generateTasks();
 
 export const defaultInvoices: Invoice[] = [
   {
     id: "inv_1",
     invoiceNumber: "INV-2026-0012",
-    clientName: "Wayne Enterprises",
-    clientEmail: "billing@waynecorp.com",
+    clientName: "Hindalco Industries Ltd",
+    clientEmail: "billing@hindalco.com",
     issueDate: "2026-06-01",
     dueDate: "2026-06-30",
     items: [
-      { description: "System Architecture Consulting, Phase 1", quantity: 60, unitPrice: 150, amount: 9000 },
-      { description: "Dedicated Dev Container Host Pro", quantity: 3, unitPrice: 400, amount: 1200 }
+      { description: "Enterprise Cloud ERP licenses", quantity: 60, unitPrice: 150, amount: 9000 },
+      { description: "Custom MCA compliance setup", quantity: 1, unitPrice: 1620, amount: 1620 }
     ],
-    taxRate: 10,
+    taxRate: 18, // standard GST rate 18%
     discount: 500,
-    total: 10620,
+    total: 11442,
     status: "Sent"
   },
   {
     id: "inv_2",
     invoiceNumber: "INV-2026-0010",
-    clientName: "Marvelous Tech Corp",
-    clientEmail: "finance@marveltech.com",
+    clientName: "Infosys Mysore Campus",
+    clientEmail: "accounts@infosys.com",
     issueDate: "2026-05-15",
     dueDate: "2026-06-15",
     items: [
-      { description: "ERP Onboarding & Pilot License Pack", quantity: 12, unitPrice: 45, amount: 540 },
-      { description: "Custom UI Branding Integration Suite", quantity: 1, unitPrice: 2500, amount: 2500 }
+      { description: "Onboarding module customization", quantity: 12, unitPrice: 45, amount: 540 },
+      { description: "Core database partition indexer", quantity: 1, unitPrice: 2500, amount: 2500 }
     ],
-    taxRate: 15,
+    taxRate: 18,
     discount: 0,
-    total: 3496,
+    total: 3587,
     status: "Paid"
   },
   {
     id: "inv_3",
     invoiceNumber: "INV-2026-0008",
-    clientName: "Vandex Supplies",
-    clientEmail: "claims@vandex.com",
+    clientName: "Reliance Retail",
+    clientEmail: "finance@ril.com",
     issueDate: "2026-04-20",
     dueDate: "2026-05-20",
     items: [
-      { description: "Logistics Optimization Modules Installation", quantity: 1, unitPrice: 5000, amount: 5000 }
+      { description: "Supply Chain optimization consultation Services", quantity: 1, unitPrice: 5000, amount: 5000 }
     ],
-    taxRate: 8,
+    taxRate: 18,
     discount: 1000,
-    total: 4200,
+    total: 4720,
     status: "Overdue"
   }
 ];
 
 export const defaultExpenses: Expense[] = [
-  { id: "exp_1", category: "Software", amount: 1240, date: "2026-06-14", merchant: "Google Cloud Platform", status: "Approved", approvedBy: "Sophia Reynolds", description: "Storage buckets & LLM pipeline infrastructure token limits" },
-  { id: "exp_2", category: "Travel", amount: 680, date: "2026-06-11", merchant: "Delta Express Lines", status: "Pending", description: "RFP presentation trip flights for Wayne Enterprises custom pipeline" },
-  { id: "exp_3", category: "Office Supplies", amount: 245, date: "2026-06-03", merchant: "Staples Global Inc", status: "Approved", approvedBy: "Sophia Reynolds", description: "Ergonomic workspace accessories & accessories stack" }
+  { id: "exp_1", category: "Software", amount: 1240, date: "2026-06-14", merchant: "Amazon Web Services (AWS)", status: "Approved", approvedBy: "Sophia Reynolds", description: "Multi-tenant container node compute hours" },
+  { id: "exp_2", category: "Travel", amount: 680, date: "2026-06-11", merchant: "Chhatrapati Shivaji Domestic Terminal", status: "Pending", description: "Business presentation client meet at Reliance HQ" },
+  { id: "exp_3", category: "Office Supplies", amount: 245, date: "2026-06-03", merchant: "Lamington Road Tech Supplies", status: "Approved", approvedBy: "Sophia Reynolds", description: "Printers ink, routers, CAT-6 optic patch cables" }
 ];
 
 export const defaultProducts: Product[] = [
-  { id: "prod_1", sku: "ERP-M1-SYS", name: "Premium Enterprise License Host", category: "Core Software", stock: 1500, minStock: 200, unitPrice: 450, costPrice: 120, supplierId: "sup_1", supplierName: "Vandex Technical", location: "US-East Cloud Gateway" },
-  { id: "prod_2", sku: "ERP-RXT-G2", name: "Automation System Pipeline Gateway Node", category: "Hardware Transceiver", stock: 14, minStock: 25, unitPrice: 1250, costPrice: 600, supplierId: "sup_2", supplierName: "LogiSilicon Parts", location: "Berlin Warehouse Zone B" },
-  { id: "prod_3", sku: "CAB-OPT-10G", name: "Optical Fiber Bridge Transceiver 12-Lane", category: "Networking Accessories", stock: 320, minStock: 100, unitPrice: 85, costPrice: 32, supplierId: "sup_2", supplierName: "LogiSilicon Parts", location: "Berlin Warehouse Zone A" }
+  { id: "prod_1", sku: "ERP-M1-SYS", name: "Premium Enterprise License Host", category: "Core Software", stock: 1500, minStock: 200, unitPrice: 450, costPrice: 120, supplierId: "sup_1", supplierName: "Vandex Technical", location: "Mumbai HQ Gateway" },
+  { id: "prod_2", sku: "ERP-RXT-G2", name: "Automation System Pipeline Gateway Node", category: "Hardware Transceiver", stock: 14, minStock: 25, unitPrice: 1250, costPrice: 600, supplierId: "sup_2", supplierName: "Swaraj Castings India", location: "Chennai Depot Warehouse Zone A" },
+  { id: "prod_3", sku: "CAB-OPT-10G", name: "Optical Fiber Bridge Transceiver 12-Lane", category: "Networking Accessories", stock: 320, minStock: 100, unitPrice: 85, costPrice: 32, supplierId: "sup_2", supplierName: "Swaraj Castings India", location: "Bengaluru Tech Park Zone B" }
 ];
 
-export const defaultSuppliers: Supplier[] = [
-  { id: "sup_1", name: "Vandex Technical", contactName: "Alice Cooper", email: "acooper@vandex.com", phone: "+1 (555) 304-9844", productsSupplied: ["Premium Enterprise License Host", "Data Sharding Nodes"] },
-  { id: "sup_2", name: "LogiSilicon Parts", contactName: "Kurt Coburn", email: "koburn@logisilicon.de", phone: "+49 30 8924370", productsSupplied: ["Automation System Pipeline Gateway Node", "Optical Fiber Bridge Transceiver 12-Lane"] }
-];
+// Generate exactly 25 Vendors/Suppliers
+const generateSuppliers = (): Supplier[] => {
+  const suppliers: Supplier[] = [
+    { id: "sup_1", name: "Vandex Technical", contactName: "Alice Cooper", email: "acooper@vandex.com", phone: "+91 22 304 9844", productsSupplied: ["Premium Enterprise License Host", "Data Sharding Nodes"] },
+    { id: "sup_2", name: "Swaraj Castings India", contactName: "Kurt Coburn", email: "koburn@logisilicon.de", phone: "+91 79 8924370", productsSupplied: ["Automation System Pipeline Gateway Node", "Optical Fiber Bridge Transceiver 12-Lane"] }
+  ];
+
+  const vendorNames = [
+    "Bengal Precision Tooling", "Gujarat Petro-Packaging", "Siliguri Tea Sorters", "Coimbatore Motor Works", 
+    "Ahmedabad Cotton Weaves", "Hyderabad Semiconductors", "Noida Optic Fibers", "Pune Metal Smelters", 
+    "Nashik Agro-Boxes", "Salem Steel Foundries", "Odisha Ore Supplies", "Jamshedpur Heavy Parts", 
+    "Ranchi Coal Washers", "Ludhiyana Bolts & Gears", "Meerut Cardboard Boxes", "Ernakulam Marine Cables", 
+    "Bhopal Electronics Ltd", "Rajkot Machine Toolings", "Surat Diamond Sorters", "Visakhapatnam Shipping Hub",
+    "Gwalior Cable Yards", "Faridabad Castings Unit", "Kanpur Leather Works"
+  ];
+
+  for (let i = 0; i < vendorNames.length; i++) {
+    suppliers.push({
+      id: `VEN-12-${100 + i}`,
+      name: vendorNames[i],
+      contactName: `${IndianFirstNames[i % IndianFirstNames.length]} ${IndianLastNames[i % IndianLastNames.length]}`,
+      email: `procurement@${vendorNames[i].toLowerCase().replace(/\s/g, "")}.co.in`,
+      phone: `+91 99011 ${22000 + i * 111}`,
+      productsSupplied: ["Industrial Raw Chemicals", "Packaging Cartons", "Logistics Shipping Shuttles"]
+    });
+  }
+
+  return suppliers;
+};
+
+export const defaultSuppliers: Supplier[] = generateSuppliers();
 
 export const defaultAutomationRules: AutomationRule[] = [
   { id: "rule_1", name: "Auto Task on Qualified Lead", trigger: "lead_status_changed", condition: "status === 'Qualified'", action: "create_task", actionPayload: { title: "Formulate Custom ERP proposal", description: "Draft the RFP outline based on customer requirements.", assignedTo: "Alex Mercer" }, active: true },
-  { id: "rule_2", name: "Notify Finance on Low Stock", trigger: "inventory_low", condition: "stock < minStock", action: "send_email", actionPayload: { to: "finance@acme.erp.com", subject: "Critical Warning: Supply restock recommended immediately", body: "A gateway node element is below minimum reorder threshold." }, active: true },
+  { id: "rule_2", name: "Notify Finance on Low Stock", trigger: "inventory_low", condition: "stock < minStock", action: "send_email", actionPayload: { to: "finance@tataagro.co.in", subject: "Critical Warning: Supply restock recommended immediately", body: "A gateway node element is below minimum reorder threshold." }, active: true },
   { id: "rule_3", name: "Auto Approve Dental Sick Leaves", trigger: "leave_request_submitted", condition: "leaveType === 'Sick' && reason.includes('dental')", action: "update_status", actionPayload: { status: "Approved" }, active: false }
 ];
 
 export const defaultAutomationLogs: AutomationLog[] = [
-  { id: "log_1", ruleName: "Auto Task on Qualified Lead", triggerEvent: "Lead Status Changed (Marvelous Tech Corp changed to Qualified)", actionTaken: "Created task 'Formulate Custom ERP proposal' assigned to Alex Mercer", timestamp: "2026-06-15 14:10:02", status: "Success" },
+  { id: "log_1", ruleName: "Auto Task on Qualified Lead", triggerEvent: "Lead Status Changed (Tata Motors Commercial changed to Qualified)", actionTaken: "Created task 'Formulate Custom ERP proposal' assigned to Alex Mercer", timestamp: "2026-06-15 14:10:02", status: "Success" },
   { id: "log_2", ruleName: "Notify Finance on Low Stock", triggerEvent: "Inventory Alert (Automation System Pipeline Gateway Node stock is 14, min is 25)", actionTaken: "Dispatched warning email to Sophia Reynolds (Finance)", timestamp: "2026-06-17 09:30:15", status: "Success" }
 ];

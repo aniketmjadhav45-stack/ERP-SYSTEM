@@ -10,6 +10,7 @@ interface FinanceModuleProps {
   onAddExpense: (expense: Omit<Expense, "id" | "status">) => void;
   onUpdateExpenseStatus: (expenseId: string, status: Expense["status"]) => void;
   currentUser: UserProfile;
+  initialTab?: "invoices" | "expenses" | "pl";
 }
 
 export default function FinanceModule({
@@ -19,9 +20,10 @@ export default function FinanceModule({
   onUpdateInvoiceStatus,
   onAddExpense,
   onUpdateExpenseStatus,
-  currentUser
+  currentUser,
+  initialTab = "invoices"
 }: FinanceModuleProps) {
-  const [activeTab, setActiveTab] = useState<"invoices" | "expenses" | "pl">("invoices");
+  const [activeTab, setActiveTab] = useState<"invoices" | "expenses" | "pl">(initialTab);
 
   // New Invoice State
   const [clientName, setClientName] = useState("");
@@ -125,12 +127,12 @@ export default function FinanceModule({
     <div className="space-y-6" id="finance-module">
       
       {/* Sub menu selector */}
-      <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800/80 w-fit">
+      <div className="flex bg-white p-1 rounded-lg border border-slate-200 w-fit shadow-sm">
         <button
           type="button"
           onClick={() => setActiveTab("invoices")}
-          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === "invoices" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
+          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "invoices" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
           }`}
         >
           Invoice Generator
@@ -138,8 +140,8 @@ export default function FinanceModule({
         <button
           type="button"
           onClick={() => setActiveTab("expenses")}
-          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === "expenses" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
+          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "expenses" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-605 hover:text-slate-900"
           }`}
         >
           Expense Claims
@@ -147,8 +149,8 @@ export default function FinanceModule({
         <button
           type="button"
           onClick={() => setActiveTab("pl")}
-          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-            activeTab === "pl" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
+          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "pl" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-605 hover:text-slate-900"
           }`}
         >
           Profit & Loss Balance
@@ -160,110 +162,110 @@ export default function FinanceModule({
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
           
           {/* Create Invoice Dynamic Form */}
-          <div className="xl:col-span-5 bg-slate-900/40 border border-slate-800 p-5 rounded-xl space-y-4">
+          <div className="xl:col-span-5 bg-white border border-slate-200 p-5 rounded-xl space-y-4 shadow-sm">
             <form onSubmit={handleInvoiceSubmit} className="space-y-4">
-              <h4 className="text-xs font-bold uppercase text-slate-100 tracking-wide border-b border-slate-800 pb-2 flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-emerald-400" /> Synthesize Client Invoice
+              <h4 className="text-xs font-bold uppercase text-slate-800 tracking-wider border-b border-slate-200 pb-2 flex items-center gap-1.5">
+                <Coins className="w-4 h-4 text-emerald-600" /> Synthesize Client Invoice
               </h4>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300">Client Entity</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Client Entity</label>
                   <input
                     type="text"
                     required
                     placeholder="Wayne Enterprises"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none p-2 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-xs text-slate-800 focus:outline-none p-2 rounded shadow-sm font-sans"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300">Billing Email</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Billing Email</label>
                   <input
                     type="email"
                     required
                     placeholder="billing@waynecorp.com"
                     value={clientEmail}
                     onChange={(e) => setClientEmail(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none p-2 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-xs text-slate-800 focus:outline-none p-2 rounded shadow-sm font-sans"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300">Tax Rate (%)</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Tax Rate (%)</label>
                   <input
                     type="number"
                     value={taxRate}
                     onChange={(e) => setTaxRate(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none p-1.5 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-xs text-slate-800 focus:outline-none p-1.5 rounded font-mono shadow-sm"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300">Discount ($)</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Discount ($)</label>
                   <input
                     type="number"
                     value={discount}
                     onChange={(e) => setDiscount(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none p-1.5 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-xs text-slate-800 focus:outline-none p-1.5 rounded font-mono shadow-sm"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300">Due Date</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Due Date</label>
                   <input
                     type="date"
                     required
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-[11px] text-slate-300 focus:outline-none p-1 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-[11px] text-slate-800 focus:outline-none p-1 rounded font-mono shadow-sm"
                   />
                 </div>
               </div>
 
               {/* Dynamic item rows */}
-              <div className="space-y-2 pt-2 border-t border-slate-850/60">
-                <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold">
+              <div className="space-y-2 pt-2 border-t border-slate-200">
+                <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                   <span>Line Items</span>
                   <button
                     type="button"
                     onClick={handleAddItemRow}
-                    className="text-indigo-400 hover:text-indigo-300 cursor-pointer flex items-center gap-0.5"
+                    className="text-indigo-650 hover:text-indigo-700 cursor-pointer flex items-center gap-0.5 font-bold font-sans"
                   >
-                    + Row
+                    + Add Row
                   </button>
                 </div>
 
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                   {invoiceItems.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 bg-slate-950/40 p-2 border border-slate-850/60 rounded">
+                    <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 bg-slate-50 p-2 border border-slate-200 rounded shadow-inner">
                       <input
                         type="text"
                         placeholder="Description"
                         value={item.description}
                         onChange={(e) => handleUpdateItemRow(idx, "description", e.target.value)}
-                        className="md:col-span-6 bg-slate-950 border border-slate-900 border-none rounded p-1 text-[11px] text-slate-200 font-mono"
+                        className="md:col-span-6 bg-white border border-slate-200 rounded p-1 text-[11px] text-slate-800 font-sans outline-none"
                       />
                       <input
                         type="number"
                         placeholder="Qty"
                         value={item.quantity}
                         onChange={(e) => handleUpdateItemRow(idx, "quantity", e.target.value)}
-                        className="md:col-span-2 bg-slate-950 border border-slate-900 border-none rounded p-1 text-[11px] text-slate-200 font-mono text-center font-bold"
+                        className="md:col-span-2 bg-white border border-slate-200 rounded p-1 text-[11px] text-slate-800 font-mono text-center font-bold outline-none"
                       />
                       <input
                         type="number"
                         placeholder="Price"
                         value={item.unitPrice}
                         onChange={(e) => handleUpdateItemRow(idx, "unitPrice", e.target.value)}
-                        className="md:col-span-3 bg-slate-950 border border-slate-900 border-none rounded p-1 text-[11px] text-slate-200 font-mono text-right text-indigo-400"
+                        className="md:col-span-3 bg-white border border-slate-200 rounded p-1 text-[11px] text-slate-805 font-mono text-right text-indigo-700 font-bold outline-none"
                       />
                       {invoiceItems.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveItemRow(idx)}
-                          className="md:col-span-1 text-[10px] text-rose-500 hover:text-rose-450 font-sans font-bold cursor-pointer text-center"
+                          className="md:col-span-1 text-[10px] text-rose-600 hover:text-rose-700 font-sans font-black cursor-pointer text-center"
                         >
                           X
                         </button>
@@ -275,7 +277,7 @@ export default function FinanceModule({
 
               <button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-555 text-white font-bold text-xs py-2.5 rounded-lg transition-all cursor-pointer shadow-lg uppercase tracking-wider"
+                className="w-full bg-emerald-600 hover:bg-emerald-550 text-white font-bold text-xs py-2.5 rounded-lg transition-all cursor-pointer shadow"
               >
                 Assemble & Publish Invoice
               </button>
@@ -283,44 +285,44 @@ export default function FinanceModule({
           </div>
 
           {/* Published Invoices Table */}
-          <div className="xl:col-span-7 bg-slate-900/40 border border-slate-800 p-5 rounded-xl space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Ledger Accounts Invoices</h4>
+          <div className="xl:col-span-7 bg-white border border-slate-200 p-5 rounded-xl space-y-3 shadow-sm">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Ledger Accounts Invoices</h4>
             
             <div className="overflow-x-auto whitespace-nowrap">
               <table className="w-full text-left text-[11px] font-mono border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-801 text-slate-500">
-                    <th className="pb-2">Invoice Code</th>
-                    <th className="pb-2 font-sans">Client Entity</th>
-                    <th className="pb-2 text-right">Sum Total</th>
-                    <th className="pb-2 text-center font-sans">Slip Status</th>
-                    <th className="pb-2 text-right">Actions</th>
+                  <tr className="border-b border-slate-200 text-slate-500 bg-slate-50/50">
+                    <th className="p-2 pb-2">Invoice Code</th>
+                    <th className="p-2 pb-2 font-sans font-bold">Client Entity</th>
+                    <th className="p-2 pb-2 text-right">Sum Total</th>
+                    <th className="p-2 pb-2 text-center font-sans font-bold">Slip Status</th>
+                    <th className="p-2 pb-2 text-right font-sans font-bold">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-850">
+                <tbody className="divide-y divide-slate-100 text-slate-700">
                   {invoices.map((inv) => (
-                    <tr key={inv.id} className="text-slate-300">
-                      <td className="py-2.5 font-bold text-slate-100">{inv.invoiceNumber}</td>
-                      <td className="py-2.5 font-sans font-bold text-slate-200 flex items-center gap-1.5">
-                        <span className="flex items-center gap-1"><Building className="w-3 text-slate-500" /> {inv.clientName}</span>
+                    <tr key={inv.id} className="hover:bg-slate-50 transition-all">
+                      <td className="p-2 py-3 font-bold text-slate-900">{inv.invoiceNumber}</td>
+                      <td className="p-2 py-3 font-sans font-bold text-slate-900 flex items-center gap-1.5">
+                        <span className="flex items-center gap-1.5"><Building className="w-3.5 h-3.5 text-slate-400" /> {inv.clientName}</span>
                       </td>
-                      <td className="py-2.5 text-right font-bold text-slate-100">${inv.total.toLocaleString()}</td>
-                      <td className="py-2.5 text-center">
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold font-sans ${
-                          inv.status === "Paid" ? "bg-emerald-500/15 text-emerald-400" :
-                          inv.status === "Sent" ? "bg-indigo-500/15 text-indigo-400" :
-                          inv.status === "Overdue" ? "bg-rose-500/15 text-rose-450" : "bg-slate-500/15 text-slate-400"
+                      <td className="p-2 py-3 text-right font-black text-slate-900 font-mono">${inv.total.toLocaleString()}</td>
+                      <td className="p-2 py-3 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold font-sans border ${
+                          inv.status === "Paid" ? "bg-emerald-50 border-emerald-150 text-emerald-700" :
+                          inv.status === "Sent" ? "bg-indigo-50 border-indigo-150 text-indigo-700" :
+                          inv.status === "Overdue" ? "bg-rose-50 border-rose-150 text-rose-700" : "bg-slate-50 border-slate-200 text-slate-550"
                         }`}>
                           {inv.status}
                         </span>
                       </td>
-                      <td className="py-2.5 text-right">
+                      <td className="p-2 py-3 text-right">
                         <div className="flex justify-end gap-1 font-sans">
                           {inv.status === "Draft" && (
                             <button
                               type="button"
                               onClick={() => onUpdateInvoiceStatus(inv.id, "Sent")}
-                              className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-2 py-0.5 rounded cursor-pointer"
+                              className="text-[10px] bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-md cursor-pointer shadow-sm transition-colors"
                             >
                               Dispatch
                             </button>
@@ -329,7 +331,7 @@ export default function FinanceModule({
                             <button
                               type="button"
                               onClick={() => onUpdateInvoiceStatus(inv.id, "Paid")}
-                              className="text-[10px] bg-emerald-950 border border-emerald-900 text-emerald-400 px-2 py-0.5 rounded cursor-pointer"
+                              className="text-[10px] bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-md cursor-pointer shadow-sm transition-colors"
                             >
                               Paid Verified
                             </button>
@@ -338,13 +340,13 @@ export default function FinanceModule({
                             <button
                               type="button"
                               onClick={() => onUpdateInvoiceStatus(inv.id, "Paid")}
-                              className="text-[10px] bg-emerald-950 border border-emerald-900 text-emerald-400 px-2 py-0.5 rounded cursor-pointer animate-pulse"
+                              className="text-[10px] bg-emerald-50 border border-emerald-205 hover:bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-md cursor-pointer shadow-sm transition-colors"
                             >
                               Settle Claim
                             </button>
                           )}
                           {inv.status === "Paid" && (
-                            <span className="text-[10px] text-slate-500 font-mono">✔ Completed</span>
+                            <span className="text-[10px] text-slate-500 font-mono font-medium">✔ Completed</span>
                           )}
                         </div>
                       </td>
@@ -363,16 +365,16 @@ export default function FinanceModule({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Submit Expense Form */}
-          <div className="lg:col-span-5 bg-slate-900/40 border border-slate-800 p-5 rounded-xl">
+          <div className="lg:col-span-5 bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
             <form onSubmit={handleExpenseSubmit} className="space-y-4">
-              <h4 className="text-xs font-bold uppercase text-slate-100 border-b border-slate-800 pb-2">Log Spend Expense Claim</h4>
+              <h4 className="text-xs font-bold uppercase text-slate-800 tracking-wider border-b border-slate-200 pb-2">Log Spend Expense Claim</h4>
               
               <div className="space-y-1">
-                <label className="text-[11px] text-slate-300">Spend Category</label>
+                <label className="text-[11px] text-slate-600 font-bold">Spend Category</label>
                 <select
                   value={expCategory}
                   onChange={(e) => setExpCategory(e.target.value as Expense["category"])}
-                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-400 p-2 rounded outline-none"
+                  className="w-full bg-white border border-slate-250 text-xs text-slate-800 p-2 rounded outline-none font-semibold shadow-sm"
                 >
                   <option>Software</option>
                   <option>Travel</option>
@@ -386,42 +388,42 @@ export default function FinanceModule({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-305">Amount ($)</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Amount ($)</label>
                   <input
                     type="number"
                     required
                     value={expAmount}
                     onChange={(e) => setExpAmount(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 p-1 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-xs text-slate-800 p-1.5 rounded font-mono shadow-sm"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-305">Merchant</label>
+                  <label className="text-[11px] text-slate-600 font-bold">Merchant</label>
                   <input
                     type="text"
                     required
                     placeholder="AWS / Delta Airlines"
                     value={expMerchant}
                     onChange={(e) => setExpMerchant(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-205 p-1 rounded font-mono"
+                    className="w-full bg-white border border-slate-250 text-xs text-slate-800 p-1.5 rounded font-sans shadow-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] text-slate-300">Scope Description</label>
+                <label className="text-[11px] text-slate-600 font-bold">Scope Description</label>
                 <textarea
                   required
                   placeholder="State purpose of budget outreach..."
                   value={expDesc}
                   onChange={(e) => setExpDesc(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-300 p-2 rounded h-16 resize-none font-mono"
+                  className="w-full bg-white border border-slate-250 text-xs text-slate-800 p-2 rounded h-16 resize-none font-sans outline-none shadow-sm"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-550 text-white font-bold text-xs py-2 rounded transition-all cursor-pointer"
+                className="w-full bg-indigo-600 hover:bg-indigo-550 text-white font-bold text-xs py-2.5 rounded-lg transition-all cursor-pointer shadow-sm"
               >
                 Submit Expense Ticket
               </button>
@@ -429,54 +431,54 @@ export default function FinanceModule({
           </div>
 
           {/* Expenses Claims logs */}
-          <div className="lg:col-span-7 bg-slate-900/40 border border-slate-800 p-5 rounded-xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Expense Claim List</h4>
-              <span className="text-[10px] text-indigo-400 font-mono">Ledger Node</span>
+          <div className="lg:col-span-7 bg-white border border-slate-200 p-5 rounded-xl space-y-4 shadow-sm">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Expense Claim List</h4>
+              <span className="text-[10px] bg-slate-50 border border-slate-200 text-slate-605 px-2 py-0.5 rounded font-mono font-bold shadow-inner">Ledger Node</span>
             </div>
 
             <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
               {expenses.map((e) => (
-                <div key={e.id} className="p-3 bg-slate-950/40 border border-slate-850 rounded-lg space-y-1.5 text-[11px] font-mono">
+                <div key={e.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5 text-[11px] font-mono shadow-sm">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-105 font-sans font-bold">{e.merchant}</span>
-                    <span className="text-slate-200 font-bold text-[12px]">${e.amount.toLocaleString()}</span>
+                    <span className="text-slate-900 font-sans font-extrabold text-xs">{e.merchant}</span>
+                    <span className="text-slate-900 font-black text-[12px]">${e.amount.toLocaleString()}</span>
                   </div>
 
-                  <p className="text-slate-400 leading-relaxed font-sans">{e.description}</p>
+                  <p className="text-slate-650 leading-relaxed font-sans">{e.description}</p>
 
-                  <div className="flex justify-between items-center pt-1.5 border-t border-slate-950 text-[10px] text-slate-500">
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 text-[10px] text-slate-500 font-sans font-medium">
                     <span>Category: {e.category} | {e.date}</span>
                     
-                    <div className="flex gap-1">
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold font-sans ${
-                        e.status === "Approved" ? "bg-emerald-500/15 text-emerald-400" :
-                        e.status === "Rejected" ? "bg-rose-500/15 text-rose-450" : "bg-amber-500/15 text-amber-400"
+                    <div className="flex gap-1.5 items-center">
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold font-sans border ${
+                        e.status === "Approved" ? "bg-emerald-50 border-emerald-150 text-emerald-700" :
+                        e.status === "Rejected" ? "bg-rose-50 border-rose-150 text-rose-700" : "bg-amber-50 border-amber-150 text-amber-705"
                       }`}>
                         {e.status}
                       </span>
 
                       {e.status === "Pending" && (
-                        <div className="flex gap-1 ml-1 font-sans">
+                        <div className="flex gap-1 font-sans">
                           {canApproveFiscal ? (
                             <>
                               <button
                                 type="button"
                                 onClick={() => onUpdateExpenseStatus(e.id, "Approved")}
-                                className="bg-emerald-950 border border-emerald-900 text-emerald-400 px-1.5 py-0.5 rounded text-[9px]"
+                                className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 text-emerald-700 px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-colors"
                               >
                                 Approve
                               </button>
                               <button
                                 type="button"
                                 onClick={() => onUpdateExpenseStatus(e.id, "Rejected")}
-                                className="bg-rose-950 border border-rose-900 text-rose-400 px-1.5 py-0.5 rounded text-[9px]"
+                                className="bg-rose-50 hover:bg-rose-100 border border-rose-250 text-rose-700 px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer transition-colors"
                               >
                                 Deny
                               </button>
                             </>
                           ) : (
-                            <span className="text-[9px] text-slate-600 block">Requires Finance Auth</span>
+                            <span className="text-[9px] text-slate-500 font-semibold block">Finance Auth Only</span>
                           )}
                         </div>
                       )}
@@ -492,77 +494,77 @@ export default function FinanceModule({
 
       {/* 3. PROFIT AND LOSS STATEMENTS */}
       {activeTab === "pl" && (
-        <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-6 space-y-6">
-          <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-6 shadow-sm">
+          <div className="border-b border-slate-205 pb-3 flex justify-between items-center">
             <div>
-              <h4 className="text-sm font-semibold text-white">Dynamic CashFlow & Net Margin Statement</h4>
-              <p className="text-[11px] text-slate-500">Aggrated records of realized income and corporate approved payouts.</p>
+              <h4 className="text-sm font-bold text-slate-900">Dynamic CashFlow & Net Margin Statement</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">Aggregated records of realized income and corporate approved payouts.</p>
             </div>
-            <span className="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded font-mono">Q2 Real-time Sync</span>
+            <span className="text-xs bg-indigo-50 border border-indigo-250 text-indigo-700 px-2.5 py-1 rounded font-mono font-bold shadow-sm">Q2 Real-time Sync</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-slate-950/40 border border-slate-850 p-4 rounded-lg space-y-1">
-              <div className="text-[10px] text-slate-500 font-mono uppercase font-bold">Realized Revenue Paid</div>
-              <div className="text-2xl font-bold text-emerald-400 font-mono">${totalRevenuePaid.toLocaleString()}</div>
-              <span className="text-[9px] text-slate-500 block">From paid client invoice slips</span>
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-1 shadow-sm">
+              <div className="text-[10px] text-slate-550 font-sans uppercase font-bold">Realized Revenue Paid</div>
+              <div className="text-2xl font-black text-emerald-600 font-mono">${totalRevenuePaid.toLocaleString()}</div>
+              <span className="text-[9px] text-slate-500 block font-sans font-medium">From paid client invoice slips</span>
             </div>
 
-            <div className="bg-slate-950/40 border border-slate-850 p-4 rounded-lg space-y-1">
-              <div className="text-[10px] text-slate-500 font-mono uppercase">Outstanding Accounts Receivables</div>
-              <div className="text-2xl font-bold text-amber-400 font-mono">${totalRevenuePending.toLocaleString()}</div>
-              <span className="text-[9px] text-slate-500 block">Outstanding invoices awaiting payment</span>
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-1 shadow-sm">
+              <div className="text-[10px] text-slate-550 font-sans uppercase font-bold">Outstanding Receivables</div>
+              <div className="text-2xl font-black text-amber-600 font-mono">${totalRevenuePending.toLocaleString()}</div>
+              <span className="text-[9px] text-slate-500 block font-sans font-medium">Outstanding invoices awaiting payment</span>
             </div>
 
-            <div className="bg-slate-950/40 border border-slate-850 p-4 rounded-lg space-y-1">
-              <div className="text-[10px] text-slate-500 font-mono uppercase">Accumulated Approved Claims</div>
-              <div className="text-2xl font-bold text-rose-500 font-mono">${totalExpenseApproved.toLocaleString()}</div>
-              <span className="text-[9px] text-slate-500 block">Cleared expense tickets</span>
+            <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg space-y-1 shadow-sm">
+              <div className="text-[10px] text-slate-550 font-sans uppercase font-bold">Approved Claims</div>
+              <div className="text-2xl font-black text-rose-600 font-mono">${totalExpenseApproved.toLocaleString()}</div>
+              <span className="text-[9px] text-slate-500 block font-sans font-medium font-medium">Cleared expense tickets</span>
             </div>
           </div>
 
           {/* Computations list */}
-          <div className="border border-slate-855 rounded-xl overflow-hidden font-mono text-xs">
-            <div className="bg-slate-950 p-3 grid grid-cols-2 text-slate-400 border-b border-slate-900">
+          <div className="border border-slate-200 rounded-xl overflow-hidden font-mono text-xs shadow-inner">
+            <div className="bg-slate-50 p-3 grid grid-cols-2 text-slate-600 border-b border-slate-200 font-semibold font-sans">
               <span>LEDGER LINE ITEM</span>
               <span className="text-right">SUM AMOUNT ($)</span>
             </div>
 
-            <div className="divide-y divide-slate-850/60 bg-slate-950/20">
-              <div className="p-3 grid grid-cols-2 text-slate-205">
+            <div className="divide-y divide-slate-150 bg-white">
+              <div className="p-3 grid grid-cols-2 text-slate-800 font-medium">
                 <span>(+) Verified Liquid Receivables</span>
-                <span className="text-right text-emerald-400 font-bold">+${totalRevenuePaid.toLocaleString()}</span>
+                <span className="text-right text-emerald-600 font-bold">+${totalRevenuePaid.toLocaleString()}</span>
               </div>
-              <div className="p-3 grid grid-cols-2 text-slate-205">
+              <div className="p-3 grid grid-cols-2 text-slate-800 font-medium">
                 <span>(-) Software SaaS Seats Subscriptions</span>
-                <span className="text-right text-rose-400">-${expenses.filter(e => e.category === "Software" && e.status === "Approved").reduce((su, e) => su + e.amount, 0).toLocaleString()}</span>
+                <span className="text-right text-rose-650 font-bold">-${expenses.filter(e => e.category === "Software" && e.status === "Approved").reduce((su, e) => su + e.amount, 0).toLocaleString()}</span>
               </div>
-              <div className="p-3 grid grid-cols-2 text-slate-205">
+              <div className="p-3 grid grid-cols-2 text-slate-800 font-medium">
                 <span>(-) Travel, Venues & Client Roadshow Outlays</span>
-                <span className="text-right text-rose-400">-${expenses.filter(e => e.category === "Travel" && e.status === "Approved").reduce((su, e) => su + e.amount, 0).toLocaleString()}</span>
+                <span className="text-right text-rose-650 font-bold">-${expenses.filter(e => e.category === "Travel" && e.status === "Approved").reduce((su, e) => su + e.amount, 0).toLocaleString()}</span>
               </div>
-              <div className="p-3 grid grid-cols-2 text-slate-205 mr-1">
+              <div className="p-3 grid grid-cols-2 text-slate-800 font-medium mr-1">
                 <span>(-) Personnel Comp & Salaries Sheet (Approved)</span>
-                <span className="text-right text-rose-405">-$0.00</span>
+                <span className="text-right text-rose-650 font-bold">-$0.00</span>
               </div>
-              <div className="p-3 grid grid-cols-2 text-slate-205">
+              <div className="p-3 grid grid-cols-2 text-slate-800 font-medium">
                 <span>(-) Equipment / Office Supplies General Spend</span>
-                <span className="text-right text-rose-400">-${expenses.filter(e => e.category === "Office Supplies" && e.status === "Approved").reduce((su, e) => su + e.amount, 0).toLocaleString()}</span>
+                <span className="text-right text-rose-650 font-bold">-${expenses.filter(e => e.category === "Office Supplies" && e.status === "Approved").reduce((su, e) => su + e.amount, 0).toLocaleString()}</span>
               </div>
 
               {/* Total margin result */}
-              <div className="p-4 grid grid-cols-2 bg-indigo-950/30 text-white font-bold border-t border-slate-800 text-sm">
+              <div className="p-4 grid grid-cols-2 bg-slate-50 text-slate-900 font-bold border-t border-slate-250 text-sm font-sans font-black">
                 <span>(=) Realized Corporate Net Income</span>
-                <span className={`text-right font-mono ${netCashFlowResult >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`text-right font-mono font-black ${netCashFlowResult >= 0 ? 'text-emerald-600' : 'text-rose-650'}`}>
                   {netCashFlowResult >= 0 ? '+' : ''}${netCashFlowResult.toLocaleString()}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-lg text-slate-400 text-xs text-center flex items-center justify-center gap-1.5">
-            <AlertCircle className="w-4 h-4 text-indigo-400 flex-shrink-0" />
-            <span>P&L accounts are computed dynamically from real cleared items. Tax audits conform to standard multi-tenant corporate specifications.</span>
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg text-slate-600 text-xs text-center flex items-center justify-center gap-1.5 shadow-sm">
+            <AlertCircle className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+            <span className="font-semibold">P&L accounts are computed dynamically from real cleared items. Tax audits conform to standard corporate specifications.</span>
           </div>
         </div>
       )}

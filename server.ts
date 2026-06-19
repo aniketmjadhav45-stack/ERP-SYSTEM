@@ -482,6 +482,19 @@ app.get("/api/suppliers", (req, res) => {
   res.json(dbSuppliers);
 });
 
+app.post("/api/suppliers", (req, res) => {
+  const newSupplier = {
+    id: "sup_" + Date.now(),
+    name: req.body.name,
+    contactName: req.body.contactName || "Liaison Officer",
+    email: req.body.email,
+    phone: req.body.phone || "+91 22 2345 6789",
+    productsSupplied: req.body.productsSupplied || []
+  };
+  dbSuppliers.push(newSupplier);
+  res.status(201).json(newSupplier);
+});
+
 // Automation Rules
 app.get("/api/automation/rules", (req, res) => {
   res.json(dbRules);

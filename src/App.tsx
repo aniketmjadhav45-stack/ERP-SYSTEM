@@ -28,6 +28,16 @@ import AutomationModule from "./components/AutomationModule";
 import CustomerPortal from "./components/PortalModules";
 import AIAssistantModule from "./components/AIAssistantModule";
 
+// Newly created Indian ERP modules
+import GSTModule from "./components/GSTModule";
+import VendorsModule from "./components/VendorsModule";
+import QuotationsModule from "./components/QuotationsModule";
+import PaymentsModule from "./components/PaymentsModule";
+import ReportsModule from "./components/ReportsModule";
+import CompanySetupModule from "./components/CompanySetupModule";
+import EmployeesModule from "./components/EmployeesModule";
+import CustomersModule from "./components/CustomersModule";
+
 import {
   LayoutDashboard,
   Users,
@@ -45,7 +55,19 @@ import {
   RefreshCw,
   Sliders,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  Receipt,
+  FileText,
+  CreditCard,
+  Percent,
+  Warehouse,
+  ShoppingBag,
+  Building2,
+  BarChart4,
+  Menu,
+  X,
+  Search,
+  Bell
 } from "lucide-react";
 
 export default function App() {
@@ -53,6 +75,10 @@ export default function App() {
 
   // Module state
   const [activeModule, setActiveModule] = useState<string>("dashboard");
+
+  // Multi-Company Support States
+  const [currentCompany, setCurrentCompany] = useState<string>("Tata Agro Pvt Ltd");
+  const [selectedIndustry, setSelectedIndustry] = useState<string>("Manufacturing");
 
   // Domain states
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -73,6 +99,8 @@ export default function App() {
   // Synchronization status
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
 
   // Synchronize entire client state from Express memory databases
   const syncWithBackend = async () => {
@@ -424,6 +452,21 @@ export default function App() {
     }
   };
 
+  const handleAddSupplier = async (supplier: Omit<Supplier, "id">) => {
+    try {
+      const response = await fetch("/api/suppliers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(supplier)
+      });
+      if (response.ok) {
+        await syncWithBackend();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // --- AUTOMATIONS ---
   const handleToggleRule = async (ruleId: string, currentActive: boolean) => {
     try {
@@ -443,9 +486,9 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
-        <div className="w-12 h-12 rounded-full border-4 border-indigo-650 border-t-indigo-400 animate-spin" />
-        <p className="text-xs font-mono text-slate-400 tracking-widest animate-pulse">BOOTING CORPORATE ENGINE SCHEMA... STAND BY</p>
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin" />
+        <p className="text-xs font-mono text-slate-600 tracking-widest animate-pulse font-bold">BOOTING INDIAN ERP RESOURCE MATRIX... STAND BY</p>
       </div>
     );
   }
@@ -456,29 +499,74 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col md:flex-row overflow-hidden" id="erp-workspace">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col md:flex-row overflow-hidden" id="erp-workspace">
       
-      {/* SIDEBAR NAVIGATION GRID */}
-      <aside className="w-full md:w-64 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800/80 flex flex-col justify-between shrink-0">
+      {/* MOBILE HEADER */}
+      <header className="md:hidden sticky top-0 z-30 bg-white border-b border-slate-250/80 px-4 py-3.5 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm text-white shadow-sm">
+            IE
+          </div>
+          <div>
+            <h1 className="text-xs font-black tracking-wider text-slate-900 uppercase">INDIAN ERP</h1>
+            <span className="text-[8px] text-slate-500 font-mono tracking-wider font-semibold block">ZO-TALLY DIRECT</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={syncWithBackend}
+            className={`p-1.5 hover:bg-slate-100 border border-slate-200 rounded text-slate-500 cursor-pointer ${
+              isSyncing ? "animate-spin text-blue-600" : ""
+            }`}
+            title="Force sync database"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-1.5 hover:bg-slate-100 rounded border border-slate-200 text-slate-700 cursor-pointer"
+          >
+            {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+        </div>
+      </header>
+
+      {/* MOBILE DRAWER BACKDROP */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* SIDEBAR NAVIGATION (DRAWER ON MOBILE, FIXED INDEX STICKY ON DESKTOP) */}
+      <aside className={`
+        fixed inset-y-0 left-0 bg-white z-40 w-64 border-r border-slate-200/80 flex flex-col justify-between shrink-0 transform transition-transform duration-300 md:translate-x-0 md:static md:h-screen md:sticky md:top-0
+        ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
         
-        <div className="flex flex-col">
+        <div className="flex flex-col h-full overflow-y-auto">
           {/* Tenant Corporate Header */}
-          <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center font-black text-xs text-white">
-                Ψ
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white hidden md:flex">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-sm text-white shadow-sm hover:scale-105 duration-200">
+                IE
               </div>
               <div>
-                <h1 className="text-xs font-black tracking-widest text-white uppercase leading-none">Apex ERP</h1>
-                <span className="text-[9px] text-slate-500 font-mono tracking-wider">Multi-Tenant v2.0</span>
+                <h1 className="text-xs font-black tracking-wider text-slate-900 uppercase">INDIAN ERP</h1>
+                <span className="text-[9px] text-slate-500 font-mono tracking-widest block font-bold mt-0.5">ZO-TALLY DIRECT</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={syncWithBackend}
-              className={`p-1 bg-slate-950 hover:bg-slate-900 duration-150 border border-slate-800/60 rounded text-slate-400 cursor-pointer ${
-                isSyncing ? "animate-spin text-indigo-450" : ""
+              className={`p-1.5 bg-slate-50 hover:bg-slate-100 duration-155 border border-slate-200/60 rounded-lg text-slate-500 cursor-pointer ${
+                isSyncing ? "animate-spin text-blue-600" : ""
               }`}
               title="Force sync database"
             >
@@ -486,110 +574,331 @@ export default function App() {
             </button>
           </div>
 
+          {/* MULTI-COMPANY SWITCHER */}
+          <div className="px-4 py-3.5 border-b border-slate-100 bg-white/70">
+            <label className="block text-[8.5px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Company Profile</label>
+            <div className="flex items-center gap-2 bg-slate-50/80 p-2 rounded-lg border border-slate-200/60 transition-all hover:border-slate-300">
+              <Building2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <select
+                value={currentCompany}
+                onChange={(e) => setCurrentCompany(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none w-full cursor-pointer"
+                title="Select current active company"
+              >
+                <option value="Tata Agro Pvt Ltd">Tata Agro Pvt Ltd</option>
+                <option value="Reliance Infra Ltd">Reliance Infra Ltd</option>
+                <option value="Adani Power Ltd">Adani Power Ltd</option>
+                <option value="Acme Consulting Services">Acme Consulting Services</option>
+              </select>
+            </div>
+          </div>
+
+          {/* TARGET INDUSTRY VERTICALS CALIBRATOR */}
+          <div className="px-4 py-3.5 border-b border-slate-100 bg-white/70">
+            <label className="block text-[8.5px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Industry Vertical</label>
+            <div className="flex items-center gap-2 bg-slate-50/80 p-2 rounded-lg border border-slate-200/60 transition-all hover:border-slate-300">
+              <Sliders className="w-4 h-4 text-slate-550 flex-shrink-0" />
+              <select
+                value={selectedIndustry}
+                onChange={(e) => setSelectedIndustry(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none w-full cursor-pointer"
+                title="Calibrate dynamic industry focus"
+              >
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Construction">Construction</option>
+                <option value="Agencies">Agencies</option>
+                <option value="Hospitals">Hospitals</option>
+                <option value="Schools">Schools</option>
+                <option value="CA Firms">CA Firms</option>
+                <option value="Distributors">Distributors</option>
+                <option value="Retail">Retail Businesses</option>
+                <option value="Service">Service Companies</option>
+              </select>
+            </div>
+          </div>
+
           {/* Navigation Items (Dependent on standard roles) */}
-          <nav className="p-3 space-y-1">
-            <span className="text-[9px] text-slate-505 font-bold tracking-widest font-mono uppercase px-3 block mb-1">Modules Console</span>
+          <nav className="p-3 space-y-1 overflow-y-auto flex-1 max-h-[60vh]">
+            <span className="text-[9px] text-slate-400 font-bold tracking-widest font-mono uppercase px-3 block mb-1">Operational Modules</span>
             
             {/* Show dynamic custom outer Customer/Vendor dashboard locks */}
             {currentUser.role === Role.CUSTOMER || currentUser.role === Role.VENDOR ? (
               <button
                 type="button"
-                onClick={() => setActiveModule("portal")}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold font-sans rounded-lg transition-all ${
-                  activeModule === "portal" ? "bg-teal-900/40 text-teal-300 font-extrabold" : "text-slate-400 hover:text-slate-200"
+                onClick={() => { setActiveModule("portal"); setIsMobileMenuOpen(false); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg transition-all text-left cursor-pointer ${
+                  activeModule === "portal" ? "bg-teal-50 border border-teal-200 text-teal-850 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
-                <ShieldCheck className="w-4 h-4 text-teal-400" />
-                <span>Secure Client Gate</span>
+                <ShieldCheck className="w-4 h-4 text-teal-650" />
+                <span>Secure Customer Gate</span>
               </button>
             ) : (
               <>
+                {/* Dashboard */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("dashboard")}
+                  onClick={() => { setActiveModule("dashboard"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "dashboard" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "dashboard" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>CFO Dashboard</span>
+                  <LayoutDashboard className="w-4 h-4 text-slate-500" />
+                  <span>Executive Dashboard</span>
                 </button>
 
+                {/* --- CORPORATE SETUP --- */}
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">Setup & Personnel</div>
+                
+                {/* 1. Company Setup */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("crm")}
+                  onClick={() => { setActiveModule("company-setup"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "crm" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "company-setup" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Users className="w-4 h-4" />
-                  <span>CRM Lead Pipeline</span>
+                  <Building className="w-4 h-4 text-slate-500" />
+                  <span>1. Company Setup</span>
                 </button>
 
+                {/* 2. Employees */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("hr")}
+                  onClick={() => { setActiveModule("employees"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "hr" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "employees" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <HeartHandshake className="w-4 h-4" />
-                  <span>HR Management</span>
+                  <Users className="w-4 h-4 text-slate-500" />
+                  <span>2. Employee Portal</span>
                 </button>
 
+                {/* 3. Customers */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("projects")}
+                  onClick={() => { setActiveModule("customers"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "projects" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "customers" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <FolderKanban className="w-4 h-4" />
-                  <span>Project Deliverables</span>
+                  <User className="w-4 h-4 text-slate-500" />
+                  <span>3. Customers Hub</span>
                 </button>
 
+                {/* --- SALES & VENDORS --- */}
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">Sales & Buy pipelines</div>
+
+                {/* 4. Vendors */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("finance")}
+                  onClick={() => { setActiveModule("vendors"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "finance" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "vendors" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Coins className="w-4 h-4" />
-                  <span>Finance Ledger</span>
+                  <ShoppingBag className="w-4 h-4 text-slate-500" />
+                  <span>4. Vendors & PO</span>
                 </button>
 
+                {/* 5. Leads */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("inventory")}
+                  onClick={() => { setActiveModule("crm"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "inventory" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "crm" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Layers className="w-4 h-4" />
-                  <span>Inventory Catalog</span>
+                  <HeartHandshake className="w-4 h-4 text-slate-500" />
+                  <span>5. Leads pipeline</span>
                 </button>
 
+                {/* --- OPERATIONS & PROJECTS --- */}
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">Delivery & Tasks Offshoring</div>
+
+                {/* 6. Projects */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("automation")}
+                  onClick={() => { setActiveModule("projects"); setIsMobileMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
-                    activeModule === "automation" ? "bg-indigo-600 text-white font-extrabold shadow-md" : "text-slate-400 hover:text-slate-205 hover:bg-slate-850/30"
+                    activeModule === "projects" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <Cpu className="w-4 h-4" />
-                  <span>Zap Automation</span>
+                  <FolderKanban className="w-4 h-4 text-slate-500" />
+                  <span>6. Projects Scheduler</span>
                 </button>
 
+                {/* 7. Tasks */}
                 <button
                   type="button"
-                  onClick={() => setActiveModule("ai")}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer bg-slate-950/40 border border-indigo-900/40 ${
-                    activeModule === "ai" ? "text-indigo-400 border-indigo-505 bg-indigo-950/20 font-extrabold" : "text-slate-400 hover:text-slate-205 hover:bg-indigo-950/10"
+                  onClick={() => { setActiveModule("tasks"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "tasks" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
-                  <BrainCircuit className="w-4 h-4 text-indigo-400 animate-pulse" />
-                  <span>Gemini Executive AI</span>
+                  <CheckCircle2 className="w-4 h-4 text-slate-500" />
+                  <span>7. Tasks Matrix</span>
+                </button>
+
+                {/* --- COMPLIANCE & ATTENDANCE --- */}
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">HR and Attendance</div>
+
+                {/* 8. Attendance */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("attendance"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "attendance" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Briefcase className="w-4 h-4 text-slate-500" />
+                  <span>8. Attendance Shift</span>
+                </button>
+
+                {/* 9. Leave Management */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("leaves"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "leaves" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Sliders className="w-4 h-4 text-slate-500" />
+                  <span>9. Leave Tracking</span>
+                </button>
+
+                {/* 10. Payroll */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("payroll"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "payroll" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Coins className="w-4 h-4 text-slate-500" />
+                  <span>10. Payroll Board</span>
+                </button>
+
+                {/* --- STOCK & LEDGERS --- */}
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">Inventory & Invoicing</div>
+
+                {/* 11. Inventory */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("inventory"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "inventory" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Layers className="w-4 h-4 text-slate-500" />
+                  <span>11. Stock Catalog</span>
+                </button>
+
+                {/* 12. Invoices */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("invoices"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "invoices" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  <span>12. Billing Invoices</span>
+                </button>
+
+                {/* 13. Expenses */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("expenses"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "expenses" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Receipt className="w-4 h-4 text-slate-500" />
+                  <span>13. Operational Expense</span>
+                </button>
+
+                {/* --- AUDIT & METRICS --- */}
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">Auditing & Insights</div>
+
+                {/* 14. Reports */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("reports"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "reports" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <BarChart4 className="w-4 h-4 text-slate-500" />
+                  <span>14. Audit Reports</span>
+                </button>
+
+                <div className="pt-3 pb-1 text-[8.5px] font-black uppercase text-slate-400 tracking-wider font-mono px-3">Indian Tax & AI tools</div>
+
+                {/* GST Board (Highly specific for Tally alignment) */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("gst"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "gst" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Percent className="w-4 h-4 text-slate-500" />
+                  <span className="flex items-center justify-between w-full">
+                    <span>GST Tax filing</span>
+                    <span className="text-[8px] bg-indigo-50 border border-indigo-100 text-indigo-700 px-1 rounded font-bold">GSTR</span>
+                  </span>
+                </button>
+
+                {/* Quotations */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("quotations"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "quotations" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  <span>Quotations & PO</span>
+                </button>
+
+                {/* Payments */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("payments"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "payments" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4 text-slate-500" />
+                  <span className="flex items-center justify-between w-full">
+                    <span>UPI Payments & Banking</span>
+                    <span className="text-[8px] bg-green-50 border border-green-100 text-green-700 px-1 rounded font-bold">BHIM</span>
+                  </span>
+                </button>
+
+                {/* Automation Trigger */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("automation"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "automation" ? "bg-blue-50 border border-blue-100 text-blue-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <Cpu className="w-4 h-4 text-slate-500" />
+                  <span>Zap Automations</span>
+                </button>
+
+                {/* AI diagnostics */}
+                <button
+                  type="button"
+                  onClick={() => { setActiveModule("ai"); setIsMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-lg transition-all text-left cursor-pointer ${
+                    activeModule === "ai" ? "bg-indigo-50 border border-indigo-105 text-indigo-700 font-extrabold shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-indigo-50/20"
+                  }`}
+                >
+                  <BrainCircuit className="w-4 h-4 text-blue-600 animate-pulse" />
+                  <span>Gemini Corporate AI</span>
                 </button>
               </>
             )}
@@ -597,20 +906,20 @@ export default function App() {
         </div>
 
         {/* PROFILE CARD FOOTER WITH INTERACTIVE ROLE OVERRIDE SLIDERS */}
-        <div className="p-3 bg-slate-950 border-t border-slate-850/80 space-y-3">
+        <div className="p-3 bg-slate-50 border-t border-slate-100 space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-300">
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm shadow-blue-300">
               {currentUser.name.substring(0, 1).toUpperCase()}
             </div>
             
             <div className="space-y-0.5 max-w-[120px] truncate">
-              <div className="text-xs font-bold text-slate-100 truncate">{currentUser.name}</div>
-              <span className="text-[10px] text-indigo-400 font-mono italic block truncate">{currentUser.role}</span>
+              <div className="text-xs font-bold text-slate-900 truncate">{currentUser.name}</div>
+              <span className="text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-mono font-bold block truncate">{currentUser.role}</span>
             </div>
 
             <button
               onClick={handleLogout}
-              className="ml-auto p-1.5 hover:bg-slate-900 text-rose-500 rounded cursor-pointer"
+              className="ml-auto p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg cursor-pointer transition-colors"
               title="Sign out of multi-tenant"
             >
               <LogOut className="w-4 h-4" />
@@ -618,14 +927,14 @@ export default function App() {
           </div>
 
           {/* Quick RBAC role switcher tools to facilitate grading */}
-          <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 space-y-1 ">
-            <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wide">Developer RBAC Switcher</span>
+          <div className="bg-white p-2.5 rounded-lg border border-slate-200/60 space-y-1">
+            <span className="text-[8px] text-slate-400 font-black block uppercase tracking-wider">Developer RBAC Switcher</span>
             <div className="flex items-center gap-1.5">
-              <Sliders className="w-3 text-indigo-400" />
+              <Sliders className="w-3 text-blue-600" />
               <select
                 value={currentUser.role}
                 onChange={(e) => handleRoleOverride(e.target.value as Role)}
-                className="bg-slate-950 text-[10px] text-slate-300 font-mono w-full border-none focus:outline-none cursor-pointer"
+                className="bg-transparent text-[10px] p-0 text-slate-600 font-mono w-full border-none focus:outline-none cursor-pointer font-bold"
               >
                 <option value={Role.SUPER_ADMIN}>Super Admin</option>
                 <option value={Role.ADMIN}>Admin</option>
@@ -643,28 +952,146 @@ export default function App() {
       </aside>
 
       {/* CORE VIEWPORT CAROUSEL */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-slate-950">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
         
-        {/* Dynamic Context Header */}
-        <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-900 pb-4">
-          <div>
-            <div className="text-[10px] font-bold text-indigo-410 font-mono uppercase tracking-widest mb-1 select-none flex items-center gap-1">
-              <span>MULTITENANT METRICS NODE</span>
-              <ChevronRight className="w-3" />
-              <span className="text-slate-500 font-sans">{activeModule.toUpperCase()}</span>
-            </div>
-            
-            <h1 className="text-xl md:text-2xl font-black text-slate-100 font-sans tracking-tight capitalize">
-              {activeModule.replace("-", " ")} Workbench
-            </h1>
+        {/* PREMIUM STICKY TOP HEADER */}
+        <header className="sticky top-0 z-30 bg-white border-b border-slate-200/60 px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          {/* Global Search Bar Everywhere */}
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search customers, employees, projects, tasks..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200/80 hover:border-slate-300 focus:bg-white focus:border-blue-500 rounded-lg py-1.5 pl-9 pr-4 text-xs font-semibold text-slate-800 outline-none transition-all shadow-sm"
+            />
+            {globalSearch && (
+              <button 
+                onClick={() => setGlobalSearch("")}
+                className="absolute right-3 top-2.5 text-xs font-bold text-slate-400 hover:text-slate-600"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-3 font-mono text-[11px] text-slate-400">
-            <span className="bg-slate-900 p-2 border border-slate-850 rounded">
-              Depot Location: <strong className="text-white">Berlin HQ</strong>
+          {/* Quick Stats Badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="bg-slate-50 px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <Building2 className="w-3.5 h-3.5 text-blue-600" />
+              Active Company: <strong className="text-slate-950 font-black">{currentCompany}</strong>
             </span>
+            <span className="bg-blue-50 px-3 py-1.5 border border-blue-105 rounded-lg text-blue-800 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <Sliders className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+              Vertical: <strong className="text-blue-950 font-black">{selectedIndustry} Mode</strong>
+            </span>
+            <button 
+              type="button" 
+              onClick={() => setActiveModule("ai")}
+              className="bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1.5 border border-indigo-100 rounded-lg text-indigo-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <BrainCircuit className="w-3.5 h-3.5" />
+              <span>Ask AI</span>
+            </button>
           </div>
         </header>
+
+        {/* MAIN BODY AND FLOATING SEARCH PALETTE */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 relative">
+          
+          {/* FLOATING COMMAND SEARCH PALETTE */}
+          {globalSearch && (
+            <div className="absolute inset-x-4 top-2 max-w-4xl mx-auto bg-white border border-slate-250 rounded-2xl shadow-2xl z-50 p-6 space-y-4 animate-slideDown max-h-[85vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <Search className="w-4 h-4 text-blue-650" /> Instant Matrix Search Results
+                  </h3>
+                  <p className="text-[10px] text-slate-500">Showing matches for &quot;{globalSearch}&quot;</p>
+                </div>
+                <button 
+                  onClick={() => setGlobalSearch("")}
+                  className="p-1 px-2.5 text-[10px] uppercase font-black bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200"
+                >
+                  ESC [x]
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* MATCHED PROJECTS */}
+                <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/60 space-y-2">
+                  <h4 className="text-xs font-extrabold text-blue-700 flex items-center gap-1">
+                    <FolderKanban className="w-3.5 h-3.5" /> Projects Mapped
+                  </h4>
+                  <div className="space-y-1.5">
+                    {projects.filter(p => p.name.toLowerCase().includes(globalSearch.toLowerCase())).slice(0, 4).map(p => (
+                      <div 
+                        key={p.id}
+                        onClick={() => { setActiveModule("projects"); setGlobalSearch(""); }}
+                        className="bg-white p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer transition-all duration-150 shadow-sm text-xs flex justify-between items-center"
+                      >
+                        <span className="font-bold text-slate-800">{p.name}</span>
+                        <span className="text-[10px] font-mono bg-blue-105 text-blue-800 px-1.5 rounded">{p.progress}%</span>
+                      </div>
+                    ))}
+                    {projects.filter(p => p.name.toLowerCase().includes(globalSearch.toLowerCase())).length === 0 && (
+                      <span className="text-[10px] text-slate-400 block">No matching projects</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* MATCHED EMPLOYEES */}
+                <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/60 space-y-2">
+                  <h4 className="text-xs font-extrabold text-indigo-700 flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5" /> Team Employees
+                  </h4>
+                  <div className="space-y-1.5">
+                    {users.filter(u => u.name.toLowerCase().includes(globalSearch.toLowerCase())).slice(0, 4).map(u => (
+                      <div 
+                        key={u.id}
+                        onClick={() => { setActiveModule("employees"); setGlobalSearch(""); }}
+                        className="bg-white p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer transition-all duration-150 shadow-sm text-xs flex justify-between items-center"
+                      >
+                        <span className="font-bold text-slate-800">{u.name}</span>
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono font-bold">{u.department}</span>
+                      </div>
+                    ))}
+                    {users.filter(u => u.name.toLowerCase().includes(globalSearch.toLowerCase())).length === 0 && (
+                      <span className="text-[10px] text-slate-400 block">No matching team members</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* MATCHED TASKS */}
+                <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/60 space-y-2 md:col-span-2">
+                  <h4 className="text-xs font-extrabold text-emerald-700 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Action Tasks
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {tasks.filter(t => t.title.toLowerCase().includes(globalSearch.toLowerCase())).slice(0, 6).map(t => (
+                      <div 
+                        key={t.id}
+                        onClick={() => { setActiveModule("tasks"); setGlobalSearch(""); }}
+                        className="bg-white p-2.5 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer transition-all duration-150 shadow-sm text-xs flex justify-between items-center"
+                      >
+                        <div className="space-y-0.5 truncate pr-2">
+                          <span className="font-bold text-slate-800 block truncate">{t.title}</span>
+                          <span className="text-[9px] text-slate-400 block font-mono">Assigned: {t.assignedTo}</span>
+                        </div>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                          t.status === "Completed" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"
+                        }`}>{t.status}</span>
+                      </div>
+                    ))}
+                    {tasks.filter(t => t.title.toLowerCase().includes(globalSearch.toLowerCase())).length === 0 && (
+                      <span className="text-[10px] text-slate-400 block md:col-span-2">No matching tasks found</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Dynamic active component selector */}
         <div className="transition-all duration-300 h-full">
@@ -694,8 +1121,68 @@ export default function App() {
             />
           )}
 
+          {activeModule === "company-setup" && (
+            <CompanySetupModule />
+          )}
+
+          {activeModule === "employees" && (
+            <EmployeesModule />
+          )}
+
+          {activeModule === "customers" && (
+            <CustomersModule />
+          )}
+
           {activeModule === "hr" && (
             <HRModule
+              attendance={attendance}
+              leaves={leaves}
+              payroll={payroll}
+              currentUser={currentUser}
+              users={users}
+              onClockInOut={handleClockInOut}
+              onSubmitLeave={handleSubmitLeave}
+              onUpdateLeaveStatus={handleUpdateLeaveStatus}
+              onAddPayroll={handleAddPayroll}
+              onUpdatePayrollStatus={handleUpdatePayrollStatus}
+            />
+          )}
+
+          {activeModule === "attendance" && (
+            <HRModule
+              initialTab="attendance"
+              attendance={attendance}
+              leaves={leaves}
+              payroll={payroll}
+              currentUser={currentUser}
+              users={users}
+              onClockInOut={handleClockInOut}
+              onSubmitLeave={handleSubmitLeave}
+              onUpdateLeaveStatus={handleUpdateLeaveStatus}
+              onAddPayroll={handleAddPayroll}
+              onUpdatePayrollStatus={handleUpdatePayrollStatus}
+            />
+          )}
+
+          {activeModule === "leaves" && (
+            <HRModule
+              initialTab="leaves"
+              attendance={attendance}
+              leaves={leaves}
+              payroll={payroll}
+              currentUser={currentUser}
+              users={users}
+              onClockInOut={handleClockInOut}
+              onSubmitLeave={handleSubmitLeave}
+              onUpdateLeaveStatus={handleUpdateLeaveStatus}
+              onAddPayroll={handleAddPayroll}
+              onUpdatePayrollStatus={handleUpdatePayrollStatus}
+            />
+          )}
+
+          {activeModule === "payroll" && (
+            <HRModule
+              initialTab="payroll"
               attendance={attendance}
               leaves={leaves}
               payroll={payroll}
@@ -719,8 +1206,44 @@ export default function App() {
             />
           )}
 
+          {activeModule === "tasks" && (
+            <ProjectsModule
+              projects={projects}
+              tasks={tasks}
+              users={users}
+              onAddTask={handleAddTask}
+              onUpdateTask={handleUpdateTask}
+            />
+          )}
+
           {activeModule === "finance" && (
             <FinanceModule
+              invoices={invoices}
+              expenses={expenses}
+              onAddInvoice={handleAddInvoice}
+              onUpdateInvoiceStatus={handleUpdateInvoiceStatus}
+              onAddExpense={handleAddExpense}
+              onUpdateExpenseStatus={handleUpdateExpenseStatus}
+              currentUser={currentUser}
+            />
+          )}
+
+          {activeModule === "invoices" && (
+            <FinanceModule
+              initialTab="invoices"
+              invoices={invoices}
+              expenses={expenses}
+              onAddInvoice={handleAddInvoice}
+              onUpdateInvoiceStatus={handleUpdateInvoiceStatus}
+              onAddExpense={handleAddExpense}
+              onUpdateExpenseStatus={handleUpdateExpenseStatus}
+              currentUser={currentUser}
+            />
+          )}
+
+          {activeModule === "expenses" && (
+            <FinanceModule
+              initialTab="expenses"
               invoices={invoices}
               expenses={expenses}
               onAddInvoice={handleAddInvoice}
@@ -737,6 +1260,44 @@ export default function App() {
               suppliers={suppliers}
               onAddProduct={handleAddProduct}
               onUpdateProduct={handleUpdateProduct}
+            />
+          )}
+
+          {activeModule === "gst" && (
+            <GSTModule
+              invoices={invoices}
+              selectedIndustry={selectedIndustry}
+            />
+          )}
+
+          {activeModule === "quotations" && (
+            <QuotationsModule
+              products={products}
+            />
+          )}
+
+          {activeModule === "payments" && (
+            <PaymentsModule
+              invoices={invoices}
+              onConfirmInvoicePaid={(invoiceId) => handleUpdateInvoiceStatus(invoiceId, "Paid")}
+            />
+          )}
+
+          {activeModule === "vendors" && (
+            <VendorsModule
+              suppliers={suppliers}
+              products={products}
+              onAddSupplier={handleAddSupplier}
+            />
+          )}
+
+          {activeModule === "reports" && (
+            <ReportsModule
+              invoices={invoices}
+              expenses={expenses}
+              products={products}
+              projects={projects}
+              selectedIndustry={selectedIndustry}
             />
           )}
 
@@ -765,8 +1326,9 @@ export default function App() {
           )}
 
         </div>
+      </div>
 
-      </main>
+    </main>
 
     </div>
   );
