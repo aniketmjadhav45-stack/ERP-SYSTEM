@@ -151,7 +151,14 @@ function getGeminiClient() {
     if (!key) {
       throw new Error("GEMINI_API_KEY is not configured in Server environment variables");
     }
-    aiClient = new GoogleGenAI({ apiKey: key });
+    aiClient = new GoogleGenAI({
+      apiKey: key,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build"
+        }
+      }
+    });
   }
   return aiClient;
 }
@@ -207,7 +214,14 @@ app.use((req, res, next) => {
       path.includes("/suppliers") || 
       path.includes("/vendors") ||
       path.includes("/documents") ||
-      path.includes("/ai");
+      path.includes("/ai") ||
+      (req.method === "GET" && (
+        path.includes("/employees") ||
+        path.includes("/departments") ||
+        path.includes("/branches") ||
+        path.includes("/teams") ||
+        path.includes("/users")
+      ));
     
     if (!isFinanceRoute && (path.includes("/leads") || path.includes("/contacts") || path.includes("/users") || path.includes("/employees") || path.includes("/departments") || path.includes("/branches") || path.includes("/teams") || path.includes("/projects") || path.includes("/tasks") || path.includes("/leaves") || path.includes("/attendance") || path.includes("/automation"))) {
       return res.status(403).json({ error: "Access Denied: Finance Auditor lacks access permissions to HRMS profile rosters or CRM Leads." });
@@ -222,7 +236,13 @@ app.use((req, res, next) => {
       path.includes("/leaves") || 
       path.includes("/users") || 
       path.includes("/documents") ||
-      path.includes("/ai");
+      path.includes("/ai") ||
+      (req.method === "GET" && (
+        path.includes("/employees") ||
+        path.includes("/departments") ||
+        path.includes("/branches") ||
+        path.includes("/teams")
+      ));
     
     if (!isAllowedEmployeeRoute && (path.includes("/leads") || path.includes("/contacts") || path.includes("/customers") || path.includes("/vendors") || path.includes("/invoices") || path.includes("/expenses") || path.includes("/inventory") || path.includes("/suppliers") || path.includes("/automation") || path.includes("/payroll") || path.includes("/employees") || path.includes("/departments") || path.includes("/branches") || path.includes("/teams"))) {
       return res.status(403).json({ error: "Access Denied: Standard Employee holds primitive read privileges. Private corporate accounts are blocked." });
@@ -1067,7 +1087,7 @@ Predict the incoming corporate cash flows for the next 4 fiscal quarters. Offer 
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: prompt,
       config: {
         systemInstruction: sysInstruction

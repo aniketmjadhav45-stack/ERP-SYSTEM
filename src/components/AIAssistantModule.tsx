@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { Sparkles, BrainCircuit, FileSearch, LineChart, HelpCircle, Loader2, ArrowRightCircle, PlusCircle, AlertCircle } from "lucide-react";
+import { UserProfile } from "../types";
+import { getHeaders } from "../utils/apiHelpers";
 
 interface AIAssistantModuleProps {
+  currentUser: UserProfile;
   onRefreshTasks: () => void;
 }
 
-export default function AIAssistantModule({ onRefreshTasks }: AIAssistantModuleProps) {
+export default function AIAssistantModule({ currentUser, onRefreshTasks }: AIAssistantModuleProps) {
   const [outputHtml, setOutputHtml] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [notesText, setNotesText] = useState("");
@@ -21,7 +24,7 @@ export default function AIAssistantModule({ onRefreshTasks }: AIAssistantModuleP
     try {
       const response = await fetch("/api/ai/process", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(currentUser),
         body: JSON.stringify({ mode, payload })
       });
       const data = await response.json();

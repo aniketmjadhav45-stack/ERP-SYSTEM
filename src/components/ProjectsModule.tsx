@@ -8,6 +8,7 @@ interface ProjectsModuleProps {
   users: UserProfile[];
   onAddTask: (task: { projectId: string; title: string; description: string; priority: Task["priority"]; dueDate: string; assignedTo: string }) => void;
   onUpdateTask: (taskId: string, updatedFields: Partial<Task>) => void;
+  onAddProject: (project: { name: string; description: string; clientName: string; startDate: string; endDate: string; budget: number; status: "Planning" | "In Progress" | "On Hold" | "Completed"; milestones: string[] }) => void;
 }
 
 export default function ProjectsModule({
@@ -15,7 +16,8 @@ export default function ProjectsModule({
   tasks,
   users,
   onAddTask,
-  onUpdateTask
+  onUpdateTask,
+  onAddProject
 }: ProjectsModuleProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || "");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -27,6 +29,15 @@ export default function ProjectsModule({
   const [taskPriority, setTaskPriority] = useState<Task["priority"]>("Medium");
   const [taskDue, setTaskDue] = useState("");
   const [taskAssignee, setTaskAssignee] = useState(users[0]?.name || "");
+
+  // New project form state
+  const [isAddingProject, setIsAddingProject] = useState(false);
+  const [projName, setProjName] = useState("");
+  const [projDesc, setProjDesc] = useState("");
+  const [projClient, setProjClient] = useState("");
+  const [projBudget, setProjBudget] = useState(0);
+  const [projStatus, setProjStatus] = useState<Project["status"]>("Planning");
+  const [projMilestones, setProjMilestones] = useState("");
 
   // Selected project details
   const currentProject = projects.find((p) => p.id === selectedProjectId) || projects[0];
@@ -52,6 +63,30 @@ export default function ProjectsModule({
     setIsAddingTask(false);
   };
 
+  const handleProjectSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!projName) return;
+
+    onAddProject({
+      name: projName,
+      description: projDesc,
+      clientName: projClient || "Internal",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date(Date.now() + 86400000 * 30).toISOString().split("T")[0],
+      budget: Number(projBudget) || 0,
+      status: projStatus,
+      milestones: projMilestones ? projMilestones.split(",").map(m => m.trim()).filter(Boolean) : ["Planning Phase", "Development", "Finalizing"]
+    });
+
+    setProjName("");
+    setProjDesc("");
+    setProjClient("");
+    setProjBudget(0);
+    setProjStatus("Planning");
+    setProjMilestones("");
+    setIsAddingProject(false);
+  };
+
   const toggleSubtask = (task: Task, subtaskId: string) => {
     const updatedSubtasks = task.subtasks.map((st) =>
       st.id === subtaskId ? { ...st, completed: !st.completed } : st
@@ -69,7 +104,7 @@ export default function ProjectsModule({
     <div className="space-y-6" id="projects-module">
       
       {/* Target Project Switcher Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
         {projects.map((p) => (
           <div
             key={p.id}
@@ -95,7 +130,123 @@ export default function ProjectsModule({
             </div>
           </div>
         ))}
+
+        {/* Dash Card for Creating New Project */}
+        <div
+          onClick={() => setIsAddingProject(true)}
+          className="p-5 rounded-xl border border-dashed border-slate-305 hover:border-indigo-400 bg-slate-50/50 hover:bg-slate-50 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all shadow-sm group min-h-[143px]"
+        >
+          <PlusCircle className="w-8 h-8 text-indigo-500 group-hover:text-indigo-600 transition-colors cursor-pointer" />
+          <span className="text-xs font-bold text-slate-500 group-hover:text-slate-700">Add New Project</span>
+        </div>
       </div>
+
+      {/* Modern Light Overlay Modal for Project Creation */}
+      {isAddingProject && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full border border-slate-105 overflow-hidden animate-fadeIn">
+            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Create CRM / Ops Project Track</h3>
+              <button 
+                type="button" 
+                onClick={() => setIsAddingProject(false)}
+                className="text-white/80 hover:text-white font-bold text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleProjectSubmit} className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Project Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Reliance Pipeline Integration"
+                  value={projName}
+                  onChange={(e) => setProjName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-sans focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Project Description</label>
+                <textarea
+                  placeholder="Describe key deliverables and timeline details."
+                  value={projDesc}
+                  onChange={(e) => setProjDesc(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-sans focus:outline-none focus:border-indigo-500 h-20 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Client / Company Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Reliance Infra Ltd"
+                    value={projClient}
+                    onChange={(e) => setProjClient(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-sans focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Project Budget (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 500000"
+                    value={projBudget || ""}
+                    onChange={(e) => setProjBudget(Number(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-sans focus:outline-none focus:border-indigo-550"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Initial Status</label>
+                  <select
+                    value={projStatus}
+                    onChange={(e) => setProjStatus(e.target.value as Project["status"])}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-semibold focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Planning">Planning</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="On Hold">On Hold</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold font-semibold text-indigo-650">Milestones (comma separated)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sign MSA, Design Draft, Client Review"
+                    value={projMilestones}
+                    onChange={(e) => setProjMilestones(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-sans focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingProject(false)}
+                  className="bg-slate-100 hover:bg-slate-250 text-slate-650 font-bold text-xs py-2 px-4 rounded-lg transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition-all cursor-pointer shadow-md"
+                >
+                  Create Project
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {currentProject ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

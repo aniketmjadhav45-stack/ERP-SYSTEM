@@ -78,7 +78,8 @@ import {
   Bell,
   Calendar,
   Settings,
-  MapPin
+  MapPin,
+  PlusCircle
 } from "lucide-react";
 
 export default function App() {
@@ -107,6 +108,30 @@ export default function App() {
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [logs, setLogs] = useState<AutomationLog[]>([]);
 
+  // Quick Create Modal States
+  const [showQuickLeadModal, setShowQuickLeadModal] = useState(false);
+  const [showQuickProjectModal, setShowQuickProjectModal] = useState(false);
+  const [showQuickTaskModal, setShowQuickTaskModal] = useState(false);
+
+  // Form states for Quick Create Modals
+  const [quickLeadName, setQuickLeadName] = useState("");
+  const [quickLeadCompany, setQuickLeadCompany] = useState("");
+  const [quickLeadValue, setQuickLeadValue] = useState(250000);
+  const [quickLeadPhone, setQuickLeadPhone] = useState("");
+  const [quickLeadEmail, setQuickLeadEmail] = useState("");
+
+  const [quickProjName, setQuickProjName] = useState("");
+  const [quickProjClient, setQuickProjClient] = useState("");
+  const [quickProjBudget, setQuickProjBudget] = useState(800000);
+  const [quickProjDesc, setQuickProjDesc] = useState("");
+
+  const [quickTaskTitle, setQuickTaskTitle] = useState("");
+  const [quickTaskDesc, setQuickTaskDesc] = useState("");
+  const [quickTaskProjectId, setQuickTaskProjectId] = useState("");
+  const [quickTaskPriority, setQuickTaskPriority] = useState<"Low" | "Medium" | "High">("Medium");
+  const [quickTaskAssignee, setQuickTaskAssignee] = useState("");
+  const [quickTaskDue, setQuickTaskDue] = useState("");
+
   // Synchronization status
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -122,6 +147,18 @@ export default function App() {
       case "Acme Consulting Services": return "tenant_acme";
       default: return "tenant_acme";
     }
+  };
+
+  const getRequestHeaders = (contentType = "application/json") => {
+    const headers: Record<string, string> = {
+      "x-company-id": currentUser?.tenantId || getCompanyId(currentCompany),
+      "x-user-role": currentUser?.role || "Super Admin",
+      "x-user-id": currentUser?.id || "system"
+    };
+    if (contentType) {
+      headers["Content-Type"] = contentType;
+    }
+    return headers;
   };
 
   // Synchronize entire client state from Express memory databases with multi-company headers
@@ -225,7 +262,7 @@ export default function App() {
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(leadData)
       });
       if (response.ok) {
@@ -240,7 +277,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/leads/${leadId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(updatedFields)
       });
       if (response.ok) {
@@ -255,7 +292,7 @@ export default function App() {
     try {
       const response = await fetch("/api/contacts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(contactData)
       });
       if (response.ok) {
@@ -269,7 +306,8 @@ export default function App() {
   const handleDeleteLead = async (leadId: string) => {
     try {
       const response = await fetch(`/api/leads/${leadId}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: getRequestHeaders(null)
       });
       if (response.ok) {
         await syncWithBackend();
@@ -285,7 +323,7 @@ export default function App() {
     try {
       const response = await fetch("/api/attendance", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ userId: currentUser.id, userName: currentUser.name })
       });
       if (response.ok) {
@@ -301,7 +339,7 @@ export default function App() {
     try {
       const response = await fetch("/api/leaves", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ ...leave, userId: currentUser.id, userName: currentUser.name })
       });
       if (response.ok) {
@@ -316,7 +354,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/leaves/${leaveId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ status })
       });
       if (response.ok) {
@@ -331,7 +369,7 @@ export default function App() {
     try {
       const response = await fetch("/api/payroll", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(record)
       });
       if (response.ok) {
@@ -346,7 +384,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/payroll/${payrollId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ status })
       });
       if (response.ok) {
@@ -358,11 +396,86 @@ export default function App() {
   };
 
   // --- PROJECTS WORKFLOW MUTATIONS ---
+  const handleAddProject = async (projectData: any) => {
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+         headers: getRequestHeaders(),
+        body: JSON.stringify(projectData)
+      });
+      if (response.ok) {
+        await syncWithBackend();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const submitQuickLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickLeadName || !quickLeadCompany) return;
+    await handleAddLead({
+      name: quickLeadName,
+      company: quickLeadCompany,
+      email: quickLeadEmail || `${quickLeadName.toLowerCase().replace(/\s+/g, "")}@example.com`,
+      phone: quickLeadPhone || "9988776655",
+      value: Number(quickLeadValue) || 150000,
+      status: "New",
+      assignedTo: currentUser?.name || "Self",
+      notes: "Quickly created from global action menu."
+    });
+    setQuickLeadName("");
+    setQuickLeadCompany("");
+    setQuickLeadPhone("");
+    setQuickLeadEmail("");
+    setShowQuickLeadModal(false);
+  };
+
+  const submitQuickProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickProjName) return;
+    await handleAddProject({
+      name: quickProjName,
+      description: quickProjDesc || "Quickly created via global actions bar",
+      clientName: quickProjClient || "Internal Key Account",
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date(Date.now() + 86450000 * 45).toISOString().split("T")[0],
+      budget: Number(quickProjBudget) || 500000,
+      status: "Planning",
+      milestones: ["Requirement gathering", "Blueprint approval", "UAT Sign-off"]
+    });
+    setQuickProjName("");
+    setQuickProjClient("");
+    setQuickProjDesc("");
+    setQuickProjBudget(500000);
+    setShowQuickProjectModal(false);
+  };
+
+  const submitQuickTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickTaskTitle || !quickTaskProjectId) return;
+    await handleAddTask({
+      projectId: quickTaskProjectId,
+      title: quickTaskTitle,
+      description: quickTaskDesc || "Assigned task",
+      priority: quickTaskPriority,
+      dueDate: quickTaskDue || new Date(Date.now() + 86400000 * 7).toISOString().split("T")[0],
+      assignedTo: quickTaskAssignee || currentUser?.name || "Team Member"
+    });
+    setQuickTaskTitle("");
+    setQuickTaskDesc("");
+    setQuickTaskProjectId("");
+    setQuickTaskPriority("Medium");
+    setQuickTaskAssignee("");
+    setQuickTaskDue("");
+    setShowQuickTaskModal(false);
+  };
+
   const handleAddTask = async (task: { projectId: string; title: string; description: string; priority: Task["priority"]; dueDate: string; assignedTo: string }) => {
     try {
       const response = await fetch("/api/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(task)
       });
       if (response.ok) {
@@ -377,7 +490,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(updatedFields)
       });
       if (response.ok) {
@@ -393,12 +506,7 @@ export default function App() {
     try {
       const response = await fetch("/api/invoices", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-company-id": currentUser?.tenantId || getCompanyId(currentCompany),
-          "x-user-role": currentUser?.role || "Super Admin",
-          "x-user-id": currentUser?.id || "system"
-        },
+        headers: getRequestHeaders(),
         body: JSON.stringify(invoice)
       });
       if (response.ok) {
@@ -413,12 +521,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/invoices/${invoiceId}`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-company-id": currentUser?.tenantId || getCompanyId(currentCompany),
-          "x-user-role": currentUser?.role || "Super Admin",
-          "x-user-id": currentUser?.id || "system"
-        },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ status, ...extraFields })
       });
       if (response.ok) {
@@ -433,7 +536,7 @@ export default function App() {
     try {
       const response = await fetch("/api/expenses", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(expense)
       });
       if (response.ok) {
@@ -448,7 +551,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/expenses/${expenseId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ status })
       });
       if (response.ok) {
@@ -464,7 +567,7 @@ export default function App() {
     try {
       const response = await fetch("/api/inventory", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(product)
       });
       if (response.ok) {
@@ -479,7 +582,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/inventory/${productId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(updatedFields)
       });
       if (response.ok) {
@@ -494,7 +597,7 @@ export default function App() {
     try {
       const response = await fetch("/api/suppliers", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify(supplier)
       });
       if (response.ok) {
@@ -510,7 +613,7 @@ export default function App() {
     try {
       const response = await fetch(`/api/automation/rules/${ruleId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getRequestHeaders(),
         body: JSON.stringify({ active: !currentActive })
       });
       if (response.ok) {
@@ -1225,6 +1328,49 @@ export default function App() {
             </div>
           )}
 
+        {/* PREMIUM GLOBAL QUICK WORKSPACE ACTIONS BAR */}
+        <div className="bg-white border border-slate-200/80 p-4 rounded-xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+              <PlusCircle className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 font-mono">Quick Matrix Insertion</h4>
+              <p className="text-[10px] text-slate-500">Instantly register new leads, create project workspaces, or assign action items.</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => setShowQuickLeadModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs py-2 px-4 rounded-lg flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            >
+              <span>+ Create Lead</span>
+            </button>
+            <button
+              onClick={() => {
+                setQuickProjName("");
+                setQuickProjClient("");
+                setQuickProjDesc("");
+                setShowQuickProjectModal(true);
+              }}
+              className="bg-violet-600 hover:bg-violet-700 text-white font-black text-xs py-2 px-4 rounded-lg flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            >
+              <span>+ Create Project</span>
+            </button>
+            <button
+              onClick={() => {
+                setQuickTaskTitle("");
+                setQuickTaskDesc("");
+                setQuickTaskProjectId(projects[0]?.id || "");
+                setShowQuickTaskModal(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs py-2 px-4 rounded-lg flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer"
+            >
+              <span>+ Create Task</span>
+            </button>
+          </div>
+        </div>
+
         {/* Dynamic active component selector */}
         <div className="transition-all duration-300 h-full">
           
@@ -1342,6 +1488,7 @@ export default function App() {
               users={users}
               onAddTask={handleAddTask}
               onUpdateTask={handleUpdateTask}
+              onAddProject={handleAddProject}
             />
           )}
 
@@ -1352,6 +1499,7 @@ export default function App() {
               users={users}
               onAddTask={handleAddTask}
               onUpdateTask={handleUpdateTask}
+              onAddProject={handleAddProject}
             />
           )}
 
@@ -1451,6 +1599,7 @@ export default function App() {
 
           {activeModule === "ai" && (
             <AIAssistantModule
+              currentUser={currentUser}
               onRefreshTasks={syncWithBackend}
             />
           )}
@@ -1503,6 +1652,286 @@ export default function App() {
           )}
 
         </div>
+
+        {/* ==================== QUICK ACTION MODALS ==================== */}
+        {showQuickLeadModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-slate-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex justify-between items-center">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider font-mono">Create CRM Lead</h3>
+                <button 
+                  type="button" 
+                  onClick={() => setShowQuickLeadModal(false)}
+                  className="text-white/85 hover:text-white font-bold text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={submitQuickLead} className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Contact Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ramesh Kumar"
+                    value={quickLeadName}
+                    onChange={(e) => setQuickLeadName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Company / Organization *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. HDFC Securities"
+                    value={quickLeadCompany}
+                    onChange={(e) => setQuickLeadCompany(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Estimated Deal Value (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 450000"
+                    value={quickLeadValue}
+                    onChange={(e) => setQuickLeadValue(Number(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="ramesh@hdfc.com"
+                      value={quickLeadEmail}
+                      onChange={(e) => setQuickLeadEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Phone Number</label>
+                    <input
+                      type="text"
+                      placeholder="9988112233"
+                      value={quickLeadPhone}
+                      onChange={(e) => setQuickLeadPhone(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickLeadModal(false)}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs py-2 px-4 rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition-all shadow-md"
+                  >
+                    Save Lead
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showQuickProjectModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-slate-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-violet-600 to-violet-700 px-6 py-4 flex justify-between items-center">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider font-mono">Create Project Track</h3>
+                <button 
+                  type="button" 
+                  onClick={() => setShowQuickProjectModal(false)}
+                  className="text-white/85 hover:text-white font-bold text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={submitQuickProject} className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Project Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. ERP Portal Build"
+                    value={quickProjName}
+                    onChange={(e) => setQuickProjName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-violet-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Client Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Tata Motors"
+                      value={quickProjClient}
+                      onChange={(e) => setQuickProjClient(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Budget (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="800000"
+                      value={quickProjBudget}
+                      onChange={(e) => setQuickProjBudget(Number(e.target.value))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-violet-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Description</label>
+                  <textarea
+                    placeholder="Milestones and scope breakdown."
+                    value={quickProjDesc}
+                    onChange={(e) => setQuickProjDesc(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-violet-500 h-20 resize-none"
+                  />
+                </div>
+
+                <div className="pt-3 flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickProjectModal(false)}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs py-2 px-4 rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition-all shadow-md"
+                  >
+                    Start Project
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showQuickTaskModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-slate-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 flex justify-between items-center">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider font-mono">Assign Task Deliverable</h3>
+                <button 
+                  type="button" 
+                  onClick={() => setShowQuickTaskModal(false)}
+                  className="text-white/85 hover:text-white font-bold text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={submitQuickTask} className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Task Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Design Landing Layout"
+                    value={quickTaskTitle}
+                    onChange={(e) => setQuickTaskTitle(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Project Scope *</label>
+                    <select
+                      required
+                      value={quickTaskProjectId}
+                      onChange={(e) => setQuickTaskProjectId(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                      <option value="">-- Choose Project --</option>
+                      {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Priority</label>
+                    <select
+                      value={quickTaskPriority}
+                      onChange={(e) => setQuickTaskPriority(e.target.value as any)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Assigned To</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Aniket"
+                      value={quickTaskAssignee}
+                      onChange={(e) => setQuickTaskAssignee(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Due Date</label>
+                    <input
+                      type="date"
+                      value={quickTaskDue}
+                      onChange={(e) => setQuickTaskDue(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase font-mono">Task Details / Description</label>
+                  <textarea
+                    placeholder="Enter specific instructions."
+                    value={quickTaskDesc}
+                    onChange={(e) => setQuickTaskDesc(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:outline-none focus:border-indigo-500 h-16 resize-none"
+                  />
+                </div>
+
+                <div className="pt-3 flex gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickTaskModal(false)}
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs py-2 px-4 rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-5 rounded-lg transition-all shadow-md"
+                  >
+                    Create Task
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
 
     </main>
