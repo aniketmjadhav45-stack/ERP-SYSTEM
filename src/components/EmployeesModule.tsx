@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Users, UserPlus, Search, Edit, Trash2, Download, FileText, Upload, 
   MapPin, Phone, Mail, CheckCircle2, AlertCircle, Building2, Briefcase, 
-  CreditCard, ShieldAlert, FileSignature, Landmark, DollarSign
+  CreditCard, ShieldAlert, FileSignature, Landmark, DollarSign, Camera
 } from "lucide-react";
+import { UserProfile } from "../types";
+import { getHeaders } from "../utils/apiHelpers";
+import { uploadFile } from "../lib/supabase";
 
 export interface Employee {
   id: string; // Auto-generated ID (e.g. EMP-2026-001)
@@ -179,12 +182,19 @@ const initialEmployees: Employee[] = [
   }
 ];
 
-export default function EmployeesModule() {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+export default function EmployeesModule({ currentUser }: { currentUser: UserProfile }) {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterType, setFilterType] = useState("");
+
+  // Photo upload local state for form (Issue 3)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
 
   // Drawer / Form Dialog controls
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -234,6 +244,49 @@ export default function EmployeesModule() {
   // UI feedback notification
   const [notification, setNotification] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetchEmployees();
+  }, [currentUser]);
+
+  const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/employees", {
+        headers: getHeaders(currentUser)
+      });
+      if (!res.ok) throw new Error("Could not restore active corporate employee directory");
+      const data = await res.json();
+      setEmployees(data);
+      setError(null);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to catalog staff members");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploadProgress(0);
+      try {
+        const uploadResult = await uploadFile(
+          file, 
+          "erp-attachments", 
+          `${currentUser?.tenantId}/photos`, 
+          (prog) => setUploadProgress(prog)
+        );
+        setUploadedPhotoUrl(uploadResult.url);
+        triggerNotification(`Photo uploaded and attached!`);
+      } catch (err: any) {
+        alert(err.message || "Photo upload failed");
+      } finally {
+        setUploadProgress(null);
+      }
+    }
+  };
+
   const triggerNotification = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 4000);
@@ -277,6 +330,7 @@ export default function EmployeesModule() {
     setDocPan(true);
     setDocResume(false);
     setDocOffer(false);
+    setUploadedPhotoUrl(""); // reset image path
     setIsFormOpen(true);
   };
 
@@ -284,46 +338,57 @@ export default function EmployeesModule() {
     setEditingEmployee(emp);
     setFirstName(emp.firstName);
     setLastName(emp.lastName);
-    setMobile(emp.mobile);
+    setMobile(emp.mobile || "");
     setEmail(emp.email);
-    setGender(emp.gender);
-    setDob(emp.dob);
-    setBloodGroup(emp.bloodGroup);
-    setType(emp.type);
-    setDepartment(emp.department);
-    setDesignation(emp.designation);
-    setBranch(emp.branch);
-    setManager(emp.manager);
-    setJoiningDate(emp.joiningDate);
-    setLocation(emp.location);
-    setStatus(emp.status);
-    setAadhaarNumber(emp.aadhaarNumber);
-    setPanNumber(emp.panNumber);
-    setUanNumber(emp.uanNumber);
-    setPfNumber(emp.pfNumber);
-    setBankName(emp.bankName);
-    setAccountNumber(emp.accountNumber);
-    setIfscCode(emp.ifscCode);
-    setBasicSalary(emp.basicSalary);
-    setHra(emp.hra);
-    setBonus(emp.bonus);
-    setCtc(emp.ctc);
-    setDocAadhaar(emp.docsAttached.aadhaar);
-    setDocPan(emp.docsAttached.pan);
-    setDocResume(emp.docsAttached.resume);
-    setDocOffer(emp.docsAttached.offerLetter);
+    setGender(emp.gender || "Male");
+    setDob(emp.dob || "");
+    setBloodGroup(emp.bloodGroup || "O+");
+    setType(emp.type || "Permanent");
+    setDepartment(emp.department || "Information Technology");
+    setDesignation(emp.designation || "");
+    setBranch(emp.branch || "Mumbai HQ");
+    setManager(emp.manager || "");
+    setJoiningDate(emp.joiningDate || "");
+    setLocation(emp.location || "");
+    setStatus(emp.status || "Active");
+    setAadhaarNumber(emp.aadhaarNumber || "");
+    setPanNumber(emp.panNumber || "");
+    setUanNumber(emp.uanNumber || "");
+    setPfNumber(emp.pfNumber || "");
+    setBankName(emp.bankName || "");
+    setAccountNumber(emp.accountNumber || "");
+    setIfscCode(emp.ifscCode || "");
+    setBasicSalary(emp.basicSalary || 50000);
+    setHra(emp.hra || 25000);
+    setBonus(emp.bonus || 5000);
+    setCtc(emp.ctc || 900000);
+    setDocAadhaar(emp.docsAttached?.aadhaar || false);
+    setDocPan(emp.docsAttached?.pan || false);
+    setDocResume(emp.docsAttached?.resume || false);
+    setDocOffer(emp.docsAttached?.offerLetter || false);
+    setUploadedPhotoUrl(emp.photoUrl || "");
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const matched = employees.find(e => e.id === id);
-    if (confirm(`Permanently terminate/remove employee profile for ${matched?.firstName} ${matched?.lastName}?`)) {
-      setEmployees(employees.filter(e => e.id !== id));
-      triggerNotification(`Removed employee record for ${matched?.firstName} ${matched?.lastName}.`);
+    if (!matched) return;
+    if (confirm(`Permanently terminate/remove employee profile for ${matched.firstName} ${matched.lastName}?`)) {
+      try {
+        const res = await fetch(`/api/employees/${id}`, {
+          method: "DELETE",
+          headers: getHeaders(currentUser)
+        });
+        if (!res.ok) throw new Error("Could not remove employee record from cloud server");
+        setEmployees(employees.filter(e => e.id !== id));
+        triggerNotification(`Removed employee record for ${matched.firstName} ${matched.lastName}.`);
+      } catch (err: any) {
+        alert(err.message || "Failed to delete employee");
+      }
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName || !lastName || !email || !aadhaarNumber || !panNumber) {
       alert("Fill in mandatory fields (Name, Email, Aadhaar, PAN).");
@@ -332,32 +397,41 @@ export default function EmployeesModule() {
 
     const calculatedCtc = (Number(basicSalary) + Number(hra)) * 12 + Number(bonus);
 
-    if (editingEmployee) {
-      setEmployees(employees.map(emp => emp.id === editingEmployee.id ? {
-        ...emp,
-        firstName, lastName, mobile, email, gender, dob, bloodGroup,
-        type, department, designation, branch, manager, joiningDate, location, status,
-        aadhaarNumber, panNumber, uanNumber, pfNumber, bankName, accountNumber, ifscCode,
-        basicSalary: Number(basicSalary), hra: Number(hra), bonus: Number(bonus), ctc: calculatedCtc,
-        docsAttached: { aadhaar: docAadhaar, pan: docPan, resume: docResume, offerLetter: docOffer }
-      } : emp));
-      triggerNotification(`Updated info for ${firstName} ${lastName}.`);
-    } else {
-      const generatedId = `EMP2026-0${101 + employees.length}`;
-      const newEmp: Employee = {
-        id: generatedId,
-        firstName, lastName,
-        photoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=120",
-        mobile, email, gender, dob, bloodGroup,
-        type, department, designation, branch, manager, joiningDate, location, status,
-        aadhaarNumber, panNumber, uanNumber, pfNumber, bankName, accountNumber, ifscCode,
-        basicSalary: Number(basicSalary), hra: Number(hra), bonus: Number(bonus), ctc: calculatedCtc,
-        docsAttached: { aadhaar: docAadhaar, pan: docPan, resume: docResume, offerLetter: docOffer }
-      };
-      setEmployees([...employees, newEmp]);
-      triggerNotification(`Registered employee ${firstName} ${lastName} with ID ${generatedId}.`);
+    const payload = {
+      firstName, lastName, mobile, email, gender, dob, bloodGroup,
+      type, department, designation, branch, manager, joiningDate, location, status,
+      aadhaarNumber, panNumber, uanNumber, pfNumber, bankName, accountNumber, ifscCode,
+      basicSalary: Number(basicSalary), hra: Number(hra), bonus: Number(bonus), ctc: calculatedCtc,
+      docsAttached: { aadhaar: docAadhaar, pan: docPan, resume: docResume, offerLetter: docOffer },
+      photoUrl: uploadedPhotoUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=120"
+    };
+
+    try {
+      if (editingEmployee) {
+        const res = await fetch(`/api/employees/${editingEmployee.id}`, {
+          method: "PUT",
+          headers: getHeaders(currentUser),
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Could not update employee details");
+        const updated = await res.json();
+        setEmployees(employees.map(emp => emp.id === editingEmployee.id ? updated : emp));
+        triggerNotification(`Updated info for ${firstName} ${lastName}.`);
+      } else {
+        const res = await fetch("/api/employees", {
+          method: "POST",
+          headers: getHeaders(currentUser),
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Could not create new staff record");
+        const created = await res.json();
+        setEmployees([...employees, created]);
+        triggerNotification(`Registered employee ${firstName} ${lastName}`);
+      }
+      setIsFormOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Failed to commit employee creation/update");
     }
-    setIsFormOpen(false);
   };
 
   const handleExportCSV = () => {
@@ -770,10 +844,29 @@ export default function EmployeesModule() {
                     />
                   </div>
                   <div className="flex flex-col space-y-1">
-                    <span className="text-[10px] text-slate-650 font-bold">Candidate Photo Attachment</span>
-                    <div className="flex items-center gap-2 border border-dashed border-slate-250 rounded-lg p-1 px-3 bg-slate-50 text-[11px] text-slate-550 select-none">
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{editingEmployee ? "photo_secured.jpg" : "Simulate Drag/Click picture upload"}</span>
+                    <span className="text-[10px] text-slate-650 font-bold">Candidate Photo Attachment (JPG, JPEG, PNG)</span>
+                    <div className="flex items-center gap-3">
+                      {uploadedPhotoUrl && (
+                        <img 
+                          src={uploadedPhotoUrl} 
+                          alt="Thumbnail preview" 
+                          className="w-10 h-10 rounded-full object-cover border border-slate-350 shadow-sm"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                      
+                      <div className="relative flex-1">
+                        <label className="flex items-center justify-center gap-2 border border-dashed border-slate-250 cursor-pointer rounded-lg p-2 bg-slate-50 hover:bg-slate-100 text-[11px] text-slate-600 transition-colors">
+                          <Camera className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{uploadProgress !== null ? `Uploading (${uploadProgress}%)` : uploadedPhotoUrl ? "Change Photo" : "Upload Photo"}</span>
+                          <input 
+                            type="file" 
+                            accept="image/png, image/jpeg, image/jpg" 
+                            onChange={handlePhotoUpload} 
+                            className="hidden" 
+                          />
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>

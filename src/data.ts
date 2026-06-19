@@ -3,7 +3,8 @@ import { Role, Tenant, UserProfile, Lead, Contact, Attendance, LeaveRequest, Pay
 // Multi-tenant initial definitions
 export const defaultTenants: Tenant[] = [
   { id: "tenant_acme", name: "Tata Agro Pvt Ltd", domain: "tataagro.erp.co.in", plan: "Enterprise", createdAt: "2024-01-10" },
-  { id: "tenant_nebula", name: "Reliance Infra Ltd", domain: "relinfra.erp.co.in", plan: "Growth", createdAt: "2025-03-15" }
+  { id: "tenant_nebula", name: "Reliance Infra Ltd", domain: "relinfra.erp.co.in", plan: "Growth", createdAt: "2025-03-15" },
+  { id: "tenant_quantum", name: "Birla Spun Pipes Ltd", domain: "birlaspun.erp.co.in", plan: "Scale-up", createdAt: "2026-06-01" }
 ];
 
 // 10 Departments
@@ -58,7 +59,7 @@ const IndianLastNames = [
 const generateUsers = (): UserProfile[] => {
   const users: UserProfile[] = [];
   
-  // Seed a super admin, admin, hr, manager, finance, sales first
+  // -- TATA AGRO (tenant_acme) --
   users.push({
     id: "user_super",
     email: "super@tataagro.co.in",
@@ -137,10 +138,82 @@ const generateUsers = (): UserProfile[] => {
     skills: ["GST Auditing", "Tally ERP", "Payroll Allocations"]
   });
 
-  // Programmatically generate remaining 44 users to complete exactly 50
-  for (let i = 1; i <= 44; i++) {
+  // -- RELIANCE INFRA (tenant_nebula) --
+  users.push({
+    id: "user_admin_nebula",
+    email: "admin@relinfra.co.in",
+    name: "Anil Ambani",
+    role: Role.ADMIN,
+    tenantId: "tenant_nebula",
+    avatarUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Corporate Admin",
+    phone: "+91 98211 44556",
+    salary: 190000,
+    skills: ["Infrastructure Planning", "Corporate Finance"]
+  });
+
+  users.push({
+    id: "user_hr_nebula",
+    email: "hr@relinfra.co.in",
+    name: "Pooja Deshmukh",
+    role: Role.HR,
+    tenantId: "tenant_nebula",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Human Resources",
+    phone: "+91 91200 44556",
+    salary: 115000,
+    skills: ["Recruiting", "Employee Care"]
+  });
+
+  users.push({
+    id: "user_finance_nebula",
+    email: "finance@relinfra.co.in",
+    name: "Sameer Joshi",
+    role: Role.FINANCE,
+    tenantId: "tenant_nebula",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Finance & Accounts",
+    phone: "+91 96200 11223",
+    salary: 125000,
+    skills: ["Audit", "Balance Sheets"]
+  });
+
+  // -- BIRLA SPUN PIPES (tenant_quantum) --
+  users.push({
+    id: "user_admin_quantum",
+    email: "admin@birlaspun.co.in",
+    name: "Kumar Birla",
+    role: Role.ADMIN,
+    tenantId: "tenant_quantum",
+    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Executive Committee",
+    phone: "+91 99300 22114",
+    salary: 210000,
+    skills: ["Heavy Operations", "Logistics Mapping"]
+  });
+
+  users.push({
+    id: "user_hr_quantum",
+    email: "hr@birlaspun.co.in",
+    name: "Meera Nair",
+    role: Role.HR,
+    tenantId: "tenant_quantum",
+    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=faces&q=80",
+    department: "Human Resources",
+    phone: "+91 95400 33221",
+    salary: 112000,
+    skills: ["Sourcing", "Employee Engagement"]
+  });
+
+  // Programmatically generate remaining 40 users divided evenly across all 3
+  for (let i = 1; i <= 39; i++) {
+    const tenantsList = ["tenant_acme", "tenant_nebula", "tenant_quantum"];
+    const domainsList = ["tataagro.co.in", "relinfra.co.in", "birlaspun.co.in"];
+    const idx = i % 3;
+    const tId = tenantsList[idx];
+    const uDomain = domainsList[idx];
+
     const fName = IndianFirstNames[i % IndianFirstNames.length];
-    // Add variations to avoid duplicate names
     const lName = IndianLastNames[(i + Math.floor(i / 10)) % IndianLastNames.length];
     const departmentName = defaultDepartments[i % defaultDepartments.length];
     const rolesPool = [Role.EMPLOYEE, Role.MANAGER, Role.EMPLOYEE, Role.EMPLOYEE];
@@ -148,10 +221,10 @@ const generateUsers = (): UserProfile[] => {
     
     users.push({
       id: `EMP-2026-0${100 + i}`,
-      email: `${fName.toLowerCase()}.${lName.toLowerCase()}${i}@tataagro.co.in`,
+      email: `${fName.toLowerCase()}.${lName.toLowerCase()}${i}@${uDomain}`,
       name: `${fName} ${lName}`,
       role: assignedRole,
-      tenantId: "tenant_acme",
+      tenantId: tId,
       avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + (i * 2500000)}?w=100&h=100&fit=crop&crop=faces&q=80`,
       department: departmentName,
       phone: `+91 98450 ${20000 + i * 171}`,

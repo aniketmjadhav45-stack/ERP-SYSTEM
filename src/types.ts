@@ -146,15 +146,43 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   items: {
+    itemName?: string;
     description: string;
+    hsnCode?: string;
     quantity: number;
+    unit?: string;
     unitPrice: number;
+    discount?: number;
+    taxRate?: number;
     amount: number;
   }[];
   taxRate: number; // percentage
   discount: number; // total amount
   total: number;
-  status: "Draft" | "Sent" | "Overdue" | "Paid" | "Partially Paid";
+  status: "Draft" | "Sent" | "Overdue" | "Paid" | "Partially Paid" | "Cancelled";
+  companyName?: string;
+  customerName?: string;
+  billingAddress?: string;
+  shippingAddress?: string;
+  gstNumber?: string;
+  panNumber?: string;
+  placeOfSupply?: string;
+  sellerGst?: string;
+  sellerPan?: string;
+  sellerAddress?: string;
+  sellerState?: string;
+  sellerCompany?: string;
+  invoiceDate?: string;
+  subtotal?: number;
+  totalDiscount?: number;
+  cgst?: number;
+  sgst?: number;
+  igst?: number;
+  amountPaid?: number;
+  balanceAmount?: number;
+  paymentDate?: string;
+  paymentMethod?: string;
+  transactionId?: string;
 }
 
 export interface Expense {
